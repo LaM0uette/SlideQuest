@@ -1,0 +1,85 @@
+/* JetBrainsMono */
+@font-face
+{
+    font-family: 'jetBrainsMono';
+    src: url('../fonts/JetBrainsMono/JetBrainsMono-Regular.ttf') format('truetype');
+}
+
+@font-face
+{
+    font-family: 'jetBrainsMono-light';
+    src: url('../fonts/JetBrainsMono/JetBrainsMono-Light.ttf') format('truetype');
+}
+
+@font-face
+{
+    font-family: 'jetBrainsMono-lightItalic';
+    src: url('../fonts/JetBrainsMono/JetBrainsMono-LightItalic.ttf');
+}
+
+@font-face
+{
+    font-family: 'jetBrainsMono-medium';
+    src: url('../fonts/JetBrainsMono/JetBrainsMono-Medium.ttf') format('truetype');
+}
+
+@font-face
+{
+    font-family: 'jetBrainsMono-mediumItalic';
+    src: url('../fonts/JetBrainsMono/JetBrainsMono-MediumItalic.ttf');
+}
+
+@font-face
+{
+    font-family: 'jetBrainsMono-bold';
+    src: url('../fonts/JetBrainsMono/JetBrainsMono-Bold.ttf') format('truetype');
+}
+
+@font-face
+{
+    font-family: 'jetBrainsMono-extraBold';
+    src: url('../fonts/JetBrainsMono/JetBrainsMono-ExtraBold.ttf');
+}
+
+
+
+/* Maxxi */
+@font-face
+{
+    font-family: 'maxxi';
+    src: url('../fonts/Maxxi/Maxxi.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face
+{
+    font-family: 'maxxi-bold';
+    src: url('../fonts/Maxxi/MaxxiBold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face
+{
+    font-family: 'maxxi-light';
+    src: url('../fonts/Maxxi/MaxxiLight.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face
+{
+    font-family: 'maxxi-thin';
+    src: url('../fonts/Maxxi/MaxxiThin.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face
+{
+    font-family: 'maxxi-extras';
+    src: url('../fonts/Maxxi/MaxxiExtras.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
