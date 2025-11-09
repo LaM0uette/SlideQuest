@@ -1,0 +1,72 @@
+﻿@page "/puzzle"
+@inherits PuzzlePresenter
+
+<PageTitle>Puzzle Glace</PageTitle>
+
+<h3>Puzzle Glace procédural</h3>
+
+<div class="controls">
+    <label>Taille de la grille:</label>
+    <select @bind="_selectedSize">
+        @foreach (var s in _sizes)
+        {
+            <option value="@s">@s x @s</option>
+        }
+    </select>
+    <button class="btn" @onclick="Generate">Générer</button>
+</div>
+
+@if (_grid is not null)
+{
+    <div class="legend">
+        <span class="cell start"></span> Départ
+        <span class="cell end"></span> Arrivée
+        <span class="cell path"></span> Chemin garanti
+        <span class="cell obstacle"></span> Obstacle
+        <span class="cell empty"></span> Glace (vide)
+        <span class="cell player"></span> Joueur
+    </div>
+
+    <div class="play-controls">
+        <button class="btn" @onclick='@(() => SlideButton("U"))'>↑</button>
+        <div>
+            <button class="btn" @onclick='@(() => SlideButton("L"))'>←</button>
+            <button class="btn" @onclick='@(() => SlideButton("D"))'>↓</button>
+            <button class="btn" @onclick='@(() => SlideButton("R"))'>→</button>
+        </div>
+        <small>Clavier: flèches / WASD / ZQSD</small>
+    </div>
+
+    <div class="grid focusable" tabindex="0" @onkeydown="OnKeyDown" style="--n: @_n">
+        @for (int y = 0; y < _n; y++)
+        {
+            @for (int x = 0; x < _n; x++)
+            {
+                var cls = _grid[x, y] switch
+                {
+                    CellType.Start => "start",
+                    CellType.End => "end",
+                    CellType.Path => "path",
+                    CellType.Obstacle => "obstacle",
+                    _ => "empty"
+                };
+                var isPlayer = (_player.x == x && _player.y == y);
+                <div class="cell @cls @(isPlayer ? "player" : string.Empty)" title="(@x,@y)"></div>
+            }
+        }
+    </div>
+
+    @if (_won)
+    {
+        <p class="win">🎉 Bravo ! Vous avez atteint l'arrivée.</p>
+    }
+
+    <div class="moves" hidden="@(_moves.Count == 0)">
+        <h4>Suite de mouvements (U/D/L/R) pour résoudre:</h4>
+        <p>@string.Join(" ", _moves)</p>
+    </div>
+}
+else
+{
+    <p>Choisissez une taille et cliquez sur Générer.</p>
+}

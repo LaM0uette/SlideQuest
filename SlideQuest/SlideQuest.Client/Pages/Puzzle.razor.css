@@ -1,0 +1,29 @@
+﻿.controls { margin: 0 0 1rem 0; display: flex; gap: .5rem; align-items: center; }
+.btn { padding: .4rem .8rem; border: 1px solid #888; background: #fafafa; cursor: pointer; }
+.btn:hover { background: #f0f0f0; }
+
+.legend { display:flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin: .5rem 0 1rem; }
+.legend .cell { width: 16px; height: 16px; display: inline-block; border: 1px solid #333; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--n), 1fr);
+  width: min(90vw, 80vh);
+  aspect-ratio: 1 / 1;
+  border: 2px solid #222;
+}
+.cell { border: 1px solid #1112; position: relative; }
+.cell.empty { background: #dff3ff; }
+.cell.obstacle { background: #444; }
+.cell.path { background: #7fd48a; }
+.cell.start { background: #ffcc00; }
+.cell.end { background: #ff6666; }
+.cell.player { outline: 2px solid #000; box-shadow: inset 0 0 0 3px #fff, 0 0 0 2px #000; background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.9) 0 30%, rgba(0,0,0,0.15) 60%);
+}
+
+.focusable:focus { outline: 3px solid #4aa3ff; outline-offset: 4px; }
+.play-controls { display:flex; flex-direction: column; gap:.25rem; margin:.5rem 0; }
+.play-controls > div { display:flex; gap:.25rem; justify-content:center; }
+.win { margin-top:.5rem; font-weight:700; color:#1a7f37; }
+
+.moves { margin-top: 1rem; font-family: JetBrains Mono, Consolas, monospace; }
