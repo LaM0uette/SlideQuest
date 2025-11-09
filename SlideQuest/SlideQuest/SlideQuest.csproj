@@ -7,7 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
         <ProjectReference Include="..\SlideQuest.Client\SlideQuest.Client.csproj"/>
+        <ProjectReference Include="..\..\SlideQuest.Shared\SlideQuest.Shared.csproj"/>
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.10"/>
     </ItemGroup>
 

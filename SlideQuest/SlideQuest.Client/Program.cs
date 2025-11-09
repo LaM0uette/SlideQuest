@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using SlideQuest.Client.Services;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -9,5 +10,8 @@ CultureInfo.DefaultThreadCurrentCulture = fr;
 CultureInfo.DefaultThreadCurrentUICulture = fr;
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+
+// SignalR hub client DI (concrete registered for interface)
+builder.Services.AddSingleton<IGameHubClient, GameHubClient>();
 
 await builder.Build().RunAsync();

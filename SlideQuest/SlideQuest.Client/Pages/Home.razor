@@ -1,7 +1,8 @@
 ﻿@page "/"
+@inherits HomePresenter
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
 
-Welcome to your new app.
+<p>Dernière direction reçue: <strong>@(Direction?.ToString() ?? "aucune")</strong></p>
+<p>Ouvrez la console du navigateur: la page Home LOG quand un événement arrive.</p>

@@ -2,6 +2,10 @@ using System.Globalization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using SlideQuest.Components;
+using SlideQuest.Endpoints;
+using SlideQuest.Hubs;
+using SlideQuest.Client.Services;
+using SlideQuest.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -30,12 +34,23 @@ builder.Services.AddSignalR();
 // Register HttpClient on the server to satisfy DI for prerendered components
 builder.Services.AddHttpClient();
 
+
+// Register a fake hub client on the server to satisfy DI during prerendering
+builder.Services.AddSingleton<IGameHubClient, FakeGameHubClient>();
+
+
+// Swagger/OpenAPI to test the endpoint
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 else
 {
@@ -45,12 +60,15 @@ else
 
 app.UseHttpsRedirection();
 
-
 app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(SlideQuest.Client._Imports).Assembly);
+
+// Map SignalR hub and the single API endpoint
+app.MapHub<GameHub>("/hubs/game");
+app.MapDirectionEndpoints();
 
 app.Run();
