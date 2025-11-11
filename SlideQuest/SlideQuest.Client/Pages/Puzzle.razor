@@ -94,7 +94,7 @@
             }
         </div>
         <div class="terminal-input" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
-            <input placeholder="Entrez !up, !down, !left, !right" @bind="_commandText" @onkeydown="OnCommandKeyDown" style="flex:1;" />
+            <input placeholder="Entrez !up, !down, !left, !right" @bind-value="_commandText" @bind-value:event="oninput" @onkeydown="OnCommandKeyDown" style="flex:1;" />
             <button class="btn" @onclick="SubmitCommandAsync">Envoyer</button>
         </div>
         <small>Astuce: ces commandes appellent POST /direction et déclenchent l'événement SignalR DirectionChanged.</small>
