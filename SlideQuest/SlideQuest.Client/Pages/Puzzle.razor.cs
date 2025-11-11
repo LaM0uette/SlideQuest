@@ -1,17 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using GridGenerator;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
+using SlideQuest.Client.Services;
+using SlideQuest.Shared.Enums;
 
 namespace SlideQuest.Client.Pages;
 
-public class PuzzlePresenter : ComponentBase
+public class PuzzlePresenter : ComponentBase, IDisposable
 {
     protected ElementReference _gridRef;
     private bool _shouldFocusGrid;
+
+    // Log & command input
+    protected string _commandText = string.Empty;
+    protected readonly List<string> _log = new();
+    private const int LogMax = 100;
+    protected ElementReference _logContainerRef;
+    private bool _scrollLogToEnd;
+
     [Inject] protected IGridGenerator _gridGenerator { get; set; } = null!;
+    [Inject] protected IGameHubClient _gameHubClient { get; set; } = null!;
+    [Inject] protected HttpClient Http { get; set; } = null!;
+    [Inject] protected IJSRuntime JS { get; set; } = null!;
+    [Inject] protected NavigationManager _nav { get; set; } = null!;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -26,6 +42,16 @@ public class PuzzlePresenter : ComponentBase
             {
                 // Ignore focus errors (e.g., element not rendered yet)
             }
+        }
+
+        if (_scrollLogToEnd)
+        {
+            _scrollLogToEnd = false;
+            try
+            {
+                await JS.InvokeVoidAsync("sqScrollToBottom", _logContainerRef);
+            }
+            catch { }
         }
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -72,6 +98,28 @@ public class PuzzlePresenter : ComponentBase
 
     protected int Min => MinFor(_difficulty);
 
+    private void Log(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return;
+        _log.Add(message);
+        if (_log.Count > LogMax)
+            _log.RemoveAt(0);
+        _scrollLogToEnd = true;
+        StateHasChanged();
+    }
+
+    private void OnDirectionChanged(Direction direction)
+    {
+        // Map to Slide
+        switch (direction)
+        {
+            case Direction.Top: Slide(0, -1); Log($"> hub: {direction}"); break;
+            case Direction.Bottom: Slide(0, 1); Log($"> hub: {direction}"); break;
+            case Direction.Left: Slide(-1, 0); Log($"> hub: {direction}"); break;
+            case Direction.Right: Slide(1, 0); Log($"> hub: {direction}"); break;
+        }
+    }
+
     protected override void OnInitialized()
     {
         int cap = CapFor(_difficulty);
@@ -81,6 +129,14 @@ public class PuzzlePresenter : ComponentBase
         _width = minCap;
         _height = minCap;
         _shouldFocusGrid = true;
+
+        // Subscribe to game hub events
+        _gameHubClient.DirectionChanged += OnDirectionChanged;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await _gameHubClient.EnsureConnectionAsync();
     }
 
     protected void OnDifficultyChanged(ChangeEventArgs e)
@@ -94,6 +150,14 @@ public class PuzzlePresenter : ComponentBase
             _maxWidth = cap;
             _maxHeight = cap;
             StateHasChanged();
+        }
+    }
+
+    protected async Task OnCommandKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key?.Equals("Enter", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            await SubmitCommandAsync();
         }
     }
 
@@ -265,5 +329,53 @@ public class PuzzlePresenter : ComponentBase
         
         CellType cell = _grid.Cells[x, y];
         return cell == CellType.Obstacle;
+    }
+
+    // --- Command handling ---
+    private static bool TryParseDirectionCommand(string input, out Direction direction)
+    {
+        direction = Direction.Top;
+        if (string.IsNullOrWhiteSpace(input)) return false;
+        string cmd = input.Trim().ToLowerInvariant();
+        return cmd switch
+        {
+            "!up" => (direction = Direction.Top) == Direction.Top,
+            "!down" => (direction = Direction.Bottom) == Direction.Bottom,
+            "!left" => (direction = Direction.Left) == Direction.Left,
+            "!right" => (direction = Direction.Right) == Direction.Right,
+            _ => false
+        };
+    }
+
+    protected async Task SubmitCommandAsync()
+    {
+        string text = _commandText.Trim();
+        if (string.IsNullOrEmpty(text)) return;
+        _commandText = string.Empty;
+
+        if (TryParseDirectionCommand(text, out var dir))
+        {
+            Log($">> {text}");
+            try
+            {
+                var resp = await Http.PostAsJsonAsync("/direction", dir);
+                Log($".. {(int)resp.StatusCode} {resp.ReasonPhrase}");
+            }
+            catch (Exception ex)
+            {
+                Log($"!! error: {ex.Message}");
+            }
+        }
+        else
+        {
+            Log($"?? unknown: {text}");
+        }
+    }
+
+    // IDisposable
+    public void Dispose()
+    {
+        _gameHubClient.DirectionChanged -= OnDirectionChanged;
+        GC.SuppressFinalize(this);
     }
 }

@@ -84,8 +84,30 @@
         </p>
         <p><small>Seed utilisée: @_grid.Seed</small></p>
     </div>
+
+    <div class="terminal">
+        <h4>Console de test (SignalR + endpoint)</h4>
+        <div class="terminal-log" @ref="_logContainerRef" style="max-height: 160px; overflow:auto; background:#111; color:#0f0; padding:0.5rem; border-radius:4px; font-family:Consolas, monospace;">
+            @foreach (var line in _log)
+            {
+                <div>@line</div>
+            }
+        </div>
+        <div class="terminal-input" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+            <input placeholder="Entrez !up, !down, !left, !right" @bind="_commandText" @onkeydown="OnCommandKeyDown" style="flex:1;" />
+            <button class="btn" @onclick="SubmitCommandAsync">Envoyer</button>
+        </div>
+        <small>Astuce: ces commandes appellent POST /direction et déclenchent l'événement SignalR DirectionChanged.</small>
+    </div>
 }
 else
 {
     <p>Choisissez une taille et cliquez sur Générer.</p>
 }
+
+<script>
+    window.sqScrollToBottom = (el) => {
+        if (!el) return;
+        el.scrollTop = el.scrollHeight;
+    };
+</script>
