@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using GridGenerator;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -8,7 +9,26 @@ namespace SlideQuest.Client.Pages;
 
 public class PuzzlePresenter : ComponentBase
 {
+    protected ElementReference _gridRef;
+    private bool _shouldFocusGrid;
     [Inject] protected IGridGenerator _gridGenerator { get; set; } = null!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_shouldFocusGrid)
+        {
+            _shouldFocusGrid = false;
+            try
+            {
+                await _gridRef.FocusAsync();
+            }
+            catch
+            {
+                // Ignore focus errors (e.g., element not rendered yet)
+            }
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
 
     protected enum Difficulty { Easy, Normal, Hard, Expert }
 
@@ -60,6 +80,7 @@ public class PuzzlePresenter : ComponentBase
         _maxHeight = cap;
         _width = minCap;
         _height = minCap;
+        _shouldFocusGrid = true;
     }
 
     protected void OnDifficultyChanged(ChangeEventArgs e)
@@ -178,6 +199,7 @@ public class PuzzlePresenter : ComponentBase
         _height = _grid.Height;
         _player = _grid.Start;
         _won = false;
+        _shouldFocusGrid = true;
         StateHasChanged();
     }
 
@@ -211,6 +233,7 @@ public class PuzzlePresenter : ComponentBase
             case "L": Slide(-1, 0); break;
             case "R": Slide(1, 0); break;
         }
+        _shouldFocusGrid = true;
     }
 
     protected void Slide(int dx, int dy)

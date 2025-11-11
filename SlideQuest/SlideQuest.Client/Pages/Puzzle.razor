@@ -49,7 +49,7 @@
     </div>
 
     <div class="grid-container" style="--size: 480px; --n: @_width; --m: @_height;">
-        <div class="grid focusable" tabindex="0" @onkeydown="OnKeyDown">
+        <div class="grid focusable" tabindex="0" @ref="_gridRef" @onkeydown="OnKeyDown" @onkeydown:preventDefault @onkeydown:stopPropagation>
             @for (int y = 0; y < _height; y++)
             {
                 @for (int x = 0; x < _width; x++)
