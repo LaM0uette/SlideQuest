@@ -6,11 +6,13 @@
 .legend .cell { width: 16px; height: 16px; display: inline-block; border: 1px solid #333; }
 
 .grid {
+  --cell: 32px;
   display: grid;
-  grid-template-columns: repeat(var(--n), 1fr);
-  width: min(90vw, 80vh);
-  aspect-ratio: 1 / 1;
+  grid-template-columns: repeat(var(--n), var(--cell));
+  grid-auto-rows: var(--cell);
+  gap: 0; /* no gaps so borders create the grid lines */
   border: 2px solid #222;
+  width: max-content; /* grow with number of columns */
 }
 .cell { border: 1px solid #1112; position: relative; }
 .cell.empty { background: #dff3ff; }

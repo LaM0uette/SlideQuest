@@ -1,4 +1,6 @@
-﻿using GridGenerator;
+﻿using System;
+using System.Collections.Generic;
+using GridGenerator;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
@@ -8,35 +10,87 @@ public class PuzzlePresenter : ComponentBase
 {
     [Inject] protected IGridGenerator _gridGenerator { get; set; } = null!;
 
-    protected readonly int[] _sizes = { 8, 16, 32 };
-    protected int _selectedSize = 8;
+    protected enum Difficulty { Easy, Normal, Hard, Expert }
 
+    protected Difficulty _difficulty = Difficulty.Easy;
+
+    // Per-difficulty caps for max dimension
+    private readonly Dictionary<Difficulty, int> _caps = new()
+    {
+        { Difficulty.Easy, 8 },
+        { Difficulty.Normal, 16 },
+        { Difficulty.Hard, 24 },
+        { Difficulty.Expert, 32 }
+    };
+
+    // User-configurable maximums for width/height
+    protected int _maxWidth;
+    protected int _maxHeight;
+
+    // Actual generated grid size
     protected int _width;
     protected int _height;
-    protected CellType[,]? _grid;
-    protected Cell _start;
-    protected Cell _end;
+
+    protected Grid? _grid;
     protected Cell _player;
     protected bool _won;
-    protected List<string> _moves = new();
+
+    private readonly Random _rng = new();
+    private const int MinSize = 5; // absolute minimum practical size for a playable grid (Easy level lower bound)
+
+    // Per-difficulty minimum caps for min dimension
+    private readonly Dictionary<Difficulty, int> _mins = new()
+    {
+        { Difficulty.Easy, 5 },
+        { Difficulty.Normal, 10 },
+        { Difficulty.Hard, 16 },
+        { Difficulty.Expert, 24 }
+    };
+
+    protected int Min => MinFor(_difficulty);
 
     protected override void OnInitialized()
     {
-        _width = _selectedSize;
-        _height = _selectedSize;
+        int cap = CapFor(_difficulty);
+        int minCap = MinFor(_difficulty);
+        _maxWidth = cap;
+        _maxHeight = cap;
+        _width = minCap;
+        _height = minCap;
     }
+
+    protected void OnDifficultyChanged(ChangeEventArgs e)
+    {
+        if (e.Value is null) return;
+        if (Enum.TryParse(typeof(Difficulty), e.Value.ToString(), out object? value) && value is Difficulty d)
+        {
+            _difficulty = d;
+            int cap = CapFor(_difficulty);
+            // Reset inputs to the default values for the selected difficulty
+            _maxWidth = cap;
+            _maxHeight = cap;
+            StateHasChanged();
+        }
+    }
+
+    protected int CapFor(Difficulty d) => _caps[d];
+    protected int MinFor(Difficulty d) => _mins[d];
 
     protected void Generate()
     {
-        _width = _selectedSize;
-        _height = _selectedSize;
-        var generated = _gridGenerator.Generate(_width, _height);
-        _grid = generated.Cells;
-        _start = generated.Start;
-        _end = generated.End;
-        _moves = generated.Moves;
-        _player = _start;
+        int cap = CapFor(_difficulty);
+        int minCap = MinFor(_difficulty);
+        int maxW = Math.Clamp(_maxWidth, minCap, cap);
+        int maxH = Math.Clamp(_maxHeight, minCap, cap);
+
+        _width = _rng.Next(minCap, maxW + 1);
+        _height = _rng.Next(minCap, maxH + 1);
+        
+        _grid = _gridGenerator.Generate(_width, _height);
+        _player = _grid.Start;
+        
         _won = false;
+        
         StateHasChanged();
     }
 
@@ -47,8 +101,10 @@ public class PuzzlePresenter : ComponentBase
     // --- Interactive sliding logic ---
     protected void OnKeyDown(KeyboardEventArgs e)
     {
-        if (_grid is null || _won) return;
-        var key = e.Key?.ToLowerInvariant();
+        if (_grid is null || _won) 
+            return;
+        
+        string? key = e.Key?.ToLowerInvariant();
         switch (key)
         {
             case "arrowup": case "w": case "z": Slide(0, -1); break;
@@ -72,8 +128,10 @@ public class PuzzlePresenter : ComponentBase
 
     protected void Slide(int dx, int dy)
     {
-        if (dx == 0 && dy == 0) return;
-        var (x, y) = _player;
+        if (dx == 0 && dy == 0) 
+            return;
+        
+        (int x, int y) = _player;
 
         // slide until next cell would be blocked or out of grid
         while (true)
@@ -86,15 +144,16 @@ public class PuzzlePresenter : ComponentBase
         }
 
         _player = new Cell(x, y);
-        if (_player == _end) _won = true;
+        if (_player == _grid?.End) _won = true;
         StateHasChanged();
     }
 
     protected bool IsBlocked(int x, int y)
     {
-        if (_grid is null) return true;
-        var cell = _grid[x, y];
-        // Only obstacles and borders block sliding; start/end/path/empty are slideable
+        if (_grid is null) 
+            return true;
+        
+        CellType cell = _grid.Cells[x, y];
         return cell == CellType.Obstacle;
     }
 }
