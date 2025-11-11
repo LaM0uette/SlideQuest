@@ -5,14 +5,23 @@
 .legend { display:flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin: .5rem 0 1rem; }
 .legend .cell { width: 16px; height: 16px; display: inline-block; border: 1px solid #333; }
 
+.grid-container {
+  width: var(--size, 480px);
+  height: var(--size, 480px);
+  display: grid;
+  place-items: center; /* center the grid if there's leftover space on one axis */
+}
+
 .grid {
-  --cell: 32px;
+  /* Cell size adapts to fill the square container while keeping cells square */
+  --cell: calc(var(--size, 480px) / max(var(--n), var(--m)));
   display: grid;
   grid-template-columns: repeat(var(--n), var(--cell));
   grid-auto-rows: var(--cell);
   gap: 0; /* no gaps so borders create the grid lines */
   border: 2px solid #222;
-  width: max-content; /* grow with number of columns */
+  width: calc(var(--cell) * var(--n));
+  height: calc(var(--cell) * var(--m));
 }
 .cell { border: 1px solid #1112; position: relative; }
 .cell.empty { background: #dff3ff; }

@@ -45,23 +45,25 @@
         <small>Clavier: flèches / WASD / ZQSD</small>
     </div>
 
-    <div class="grid focusable" tabindex="0" @onkeydown="OnKeyDown" style="--n: @_width">
-        @for (int y = 0; y < _height; y++)
-        {
-            @for (int x = 0; x < _width; x++)
+    <div class="grid-container" style="--size: 480px; --n: @_width; --m: @_height;">
+        <div class="grid focusable" tabindex="0" @onkeydown="OnKeyDown">
+            @for (int y = 0; y < _height; y++)
             {
-                string cls = _grid.Cells[x, y] switch
+                @for (int x = 0; x < _width; x++)
                 {
-                    CellType.Start => "start",
-                    CellType.End => "end",
-                    CellType.Path => "path",
-                    CellType.Obstacle => "obstacle",
-                    _ => "empty"
-                };
-                bool isPlayer = (_player.X == x && _player.Y == y);
-                <div class="cell @cls @(isPlayer ? "player" : string.Empty)" title="(@x,@y)"></div>
+                    string cls = _grid.Cells[x, y] switch
+                    {
+                        CellType.Start => "start",
+                        CellType.End => "end",
+                        CellType.Path => "path",
+                        CellType.Obstacle => "obstacle",
+                        _ => "empty"
+                    };
+                    bool isPlayer = (_player.X == x && _player.Y == y);
+                    <div class="cell @cls @(isPlayer ? "player" : string.Empty)" title="(@x,@y)"></div>
+                }
             }
-        }
+        </div>
     </div>
 
     @if (_won)
