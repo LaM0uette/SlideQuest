@@ -9,8 +9,8 @@ public class GridGenerator : IGridGenerator
     private int _width;
     private int _height;
     private CellType[,]? _cells;
-    private (int x, int y) _start;
-    private (int x, int y) _end;
+    private Cell _start;
+    private Cell _end;
     private readonly Random _rng = new();
     private List<string> _moves = new();
 
@@ -35,14 +35,14 @@ public class GridGenerator : IGridGenerator
                 continue;
 
             foreach (var c in pathCells)
-                _cells[c.x, c.y] = CellType.Path;
+                _cells[c.X, c.Y] = CellType.Path;
 
             foreach (var b in blockers)
-                if (InGrid(b.x, b.y) && _cells[b.x, b.y] == CellType.Empty)
-                    _cells[b.x, b.y] = CellType.Obstacle;
+                if (InGrid(b.X, b.Y) && _cells[b.X, b.Y] == CellType.Empty)
+                    _cells[b.X, b.Y] = CellType.Obstacle;
 
-            _cells[_start.x, _start.y] = CellType.Start;
-            _cells[_end.x, _end.y] = CellType.End;
+            _cells[_start.X, _start.Y] = CellType.Start;
+            _cells[_end.X, _end.Y] = CellType.End;
 
             AddRandomObstacles(pathCells, blockers);
 
@@ -54,8 +54,8 @@ public class GridGenerator : IGridGenerator
 
         // Fallback empty grid
         _cells = new CellType[width, height];
-        _start = (0, 0);
-        _end = (width - 1, height - 1);
+        _start = new Cell(0, 0);
+        _end = new Cell(width - 1, height - 1);
         return new Grid(width, height, _cells, _start, _end, new List<string>());
     }
 
@@ -73,11 +73,11 @@ public class GridGenerator : IGridGenerator
             var e = RandomCellOnSide(endSide);
             if (startSide % 2 == 0)
             {
-                if (e.x == _start.x) continue;
+                if (e.X == _start.X) continue;
             }
             else
             {
-                if (e.y == _start.y) continue;
+                if (e.Y == _start.Y) continue;
             }
             _end = e;
             return;
@@ -86,29 +86,31 @@ public class GridGenerator : IGridGenerator
         var forced = RandomCellOnSide(endSide);
         if (startSide % 2 == 0)
         {
-            forced.x = (forced.x + 1) % _width;
-            if (forced.x == _start.x) forced.x = (forced.x + 1) % _width;
+            var newX = (forced.X + 1) % _width;
+            if (newX == _start.X) newX = (newX + 1) % _width;
+            forced = new Cell(newX, forced.Y);
         }
         else
         {
-            forced.y = (forced.y + 1) % _height;
-            if (forced.y == _start.y) forced.y = (forced.y + 1) % _height;
+            var newY = (forced.Y + 1) % _height;
+            if (newY == _start.Y) newY = (newY + 1) % _height;
+            forced = new Cell(forced.X, newY);
         }
         _end = forced;
     }
 
-    private (int x, int y) RandomCellOnSide(int side)
+    private Cell RandomCellOnSide(int side)
     {
         return side switch
         {
-            0 => (_rng.Next(_width), 0),
-            1 => (_width - 1, _rng.Next(_height)),
-            2 => (_rng.Next(_width), _height - 1),
-            _ => (0, _rng.Next(_height))
+            0 => new Cell(_rng.Next(_width), 0),
+            1 => new Cell(_width - 1, _rng.Next(_height)),
+            2 => new Cell(_rng.Next(_width), _height - 1),
+            _ => new Cell(0, _rng.Next(_height))
         };
     }
 
-    private bool TryBuildGuaranteedPath(out List<(int x, int y)> path, out HashSet<(int x, int y)> blockers)
+    private bool TryBuildGuaranteedPath(out List<Cell> path, out HashSet<Cell> blockers)
     {
         path = new();
         blockers = new();
@@ -124,30 +126,31 @@ public class GridGenerator : IGridGenerator
         {
             var a = anchors[i];
             var b = anchors[i + 1];
-            if (!(a.x == b.x || a.y == b.y)) return false;
+            if (!(a.X == b.X || a.Y == b.Y)) return false;
 
-            int dx = Math.Sign(b.x - a.x);
-            int dy = Math.Sign(b.y - a.y);
+            int dx = Math.Sign(b.X - a.X);
+            int dy = Math.Sign(b.Y - a.Y);
 
-            int sx = b.x + dx, sy = b.y + dy;
-            if (InGrid(sx, sy) && (sx, sy) != _start && (sx, sy) != _end)
-                blockers.Add((sx, sy));
+            int sx = b.X + dx, sy = b.Y + dy;
+            var aroundB = new Cell(sx, sy);
+            if (InGrid(sx, sy) && aroundB != _start && aroundB != _end)
+                blockers.Add(aroundB);
         }
 
-        var linearCells = new List<(int x, int y)>();
+        var linearCells = new List<Cell>();
         var cur = anchors[0];
         linearCells.Add(cur);
         for (int i = 1; i < anchors.Count; i++)
         {
             var nxt = anchors[i];
-            int dx = Math.Sign(nxt.x - cur.x);
-            int dy = Math.Sign(nxt.y - cur.y);
-            int x = cur.x, y = cur.y;
-            while (x != nxt.x || y != nxt.y)
+            int dx = Math.Sign(nxt.X - cur.X);
+            int dy = Math.Sign(nxt.Y - cur.Y);
+            int x = cur.X, y = cur.Y;
+            while (x != nxt.X || y != nxt.Y)
             {
                 x += dx; y += dy;
                 if (!InGrid(x, y)) return false;
-                linearCells.Add((x, y));
+                linearCells.Add(new Cell(x, y));
             }
             cur = nxt;
         }
@@ -166,7 +169,7 @@ public class GridGenerator : IGridGenerator
         return true;
     }
 
-    private void DeriveMoves(List<(int x, int y)> path)
+    private void DeriveMoves(List<Cell> path)
     {
         if (path.Count < 2) return;
         int i = 1;
@@ -174,13 +177,13 @@ public class GridGenerator : IGridGenerator
         {
             var prev = path[i - 1];
             var cur = path[i];
-            int dx = Math.Sign(cur.x - prev.x);
-            int dy = Math.Sign(cur.y - prev.y);
+            int dx = Math.Sign(cur.X - prev.X);
+            int dy = Math.Sign(cur.Y - prev.Y);
             char dir = dx switch { > 0 => 'R', < 0 => 'L', _ => (dy > 0 ? 'D' : 'U') };
             while (i < path.Count)
             {
                 var p = path[i - 1]; var c = path[i];
-                int dx2 = Math.Sign(c.x - p.x); int dy2 = Math.Sign(c.y - p.y);
+                int dx2 = Math.Sign(c.X - p.X); int dy2 = Math.Sign(c.Y - p.Y);
                 char dir2 = dx2 switch { > 0 => 'R', < 0 => 'L', _ => (dy2 > 0 ? 'D' : 'U') };
                 if (dir2 != dir) break;
                 i++;
@@ -189,10 +192,10 @@ public class GridGenerator : IGridGenerator
         }
     }
 
-    private void AddRandomObstacles(List<(int x, int y)> pathCells, HashSet<(int x, int y)> mandatoryBlockers)
+    private void AddRandomObstacles(List<Cell> pathCells, HashSet<Cell> mandatoryBlockers)
     {
         if (_cells is null) return;
-        var forbidden = new HashSet<(int x, int y)>(pathCells);
+        var forbidden = new HashSet<Cell>(pathCells);
         foreach (var b in mandatoryBlockers) forbidden.Add(b);
         forbidden.Add(_start);
         forbidden.Add(_end);
@@ -211,21 +214,21 @@ public class GridGenerator : IGridGenerator
             int x = placeOnRow ? _rng.Next(1, _width - 1) : (_rng.NextDouble() < 0.5 ? 1 : _width - 2);
             int y = placeOnRow ? (_rng.NextDouble() < 0.5 ? 1 : _height - 2) : _rng.Next(1, _height - 1);
 
-            if (forbidden.Contains((x, y))) continue;
+            if (forbidden.Contains(new Cell(x, y))) continue;
 
             bool nearCritical = false;
             foreach (var p in pathCells)
             {
-                if (Math.Abs(p.x - x) + Math.Abs(p.y - y) <= 1) { nearCritical = true; break; }
+                if (Math.Abs(p.X - x) + Math.Abs(p.Y - y) <= 1) { nearCritical = true; break; }
             }
             if (nearCritical) continue;
-            if (Math.Abs(_start.x - x) + Math.Abs(_start.y - y) <= 1) continue;
-            if (Math.Abs(_end.x - x) + Math.Abs(_end.y - y) <= 1) continue;
+            if (Math.Abs(_start.X - x) + Math.Abs(_start.Y - y) <= 1) continue;
+            if (Math.Abs(_end.X - x) + Math.Abs(_end.Y - y) <= 1) continue;
 
             if (CanPlaceIsolated(x, y, forbidden))
             {
                 _cells[x, y] = CellType.Obstacle;
-                forbidden.Add((x, y));
+                forbidden.Add(new Cell(x, y));
                 decoysPlaced++;
             }
         }
@@ -242,12 +245,12 @@ public class GridGenerator : IGridGenerator
             if (CountObstacles() >= maxTotalObstacles) break;
 
             int x = _rng.Next(_width); int y = _rng.Next(_height);
-            if (forbidden.Contains((x, y))) continue;
+            if (forbidden.Contains(new Cell(x, y))) continue;
 
             bool nearCritical2 = false;
             foreach (var p in pathCells)
             {
-                if (Math.Abs(p.x - x) + Math.Abs(p.y - y) == 1)
+                if (Math.Abs(p.X - x) + Math.Abs(p.Y - y) == 1)
                 { nearCritical2 = true; break; }
             }
             if (nearCritical2 && _rng.NextDouble() < 0.7) continue;
@@ -262,12 +265,12 @@ public class GridGenerator : IGridGenerator
 
     private bool InGrid(int x, int y) => x >= 0 && y >= 0 && x < _width && y < _height;
 
-    private bool CanPlaceIsolated(int x, int y, HashSet<(int x, int y)>? forbidden = null)
+    private bool CanPlaceIsolated(int x, int y, HashSet<Cell>? forbidden = null)
     {
         if (_cells is null) return false;
         if (!InGrid(x, y)) return false;
         if (x == 0 || y == 0 || x == _width - 1 || y == _height - 1) return false;
-        if (forbidden is not null && forbidden.Contains((x, y))) return false;
+        if (forbidden is not null && forbidden.Contains(new Cell(x, y))) return false;
         if (_cells[x, y] != CellType.Empty) return false;
         return !(InGrid(x + 1, y) && _cells[x + 1, y] == CellType.Obstacle
                  || InGrid(x - 1, y) && _cells[x - 1, y] == CellType.Obstacle
@@ -285,14 +288,14 @@ public class GridGenerator : IGridGenerator
         return c;
     }
 
-    private bool SimulateMovesAndTrace(List<string> moves, HashSet<(int x, int y)> blockers, out List<(int x, int y)> traced)
+    private bool SimulateMovesAndTrace(List<string> moves, HashSet<Cell> blockers, out List<Cell> traced)
     {
-        traced = new List<(int x, int y)>();
+        traced = new List<Cell>();
         if (moves.Count == 0) return false;
 
         bool Blocked(int x, int y)
         {
-            return !InGrid(x, y) || blockers.Contains((x, y));
+            return !InGrid(x, y) || blockers.Contains(new Cell(x, y));
         }
 
         var pos = _start;
@@ -310,16 +313,16 @@ public class GridGenerator : IGridGenerator
                 default: return false;
             }
 
-            if (!InGrid(pos.x + dx, pos.y + dy) || Blocked(pos.x + dx, pos.y + dy))
+            if (!InGrid(pos.X + dx, pos.Y + dy) || Blocked(pos.X + dx, pos.Y + dy))
                 return false;
 
             while (true)
             {
-                int nx = pos.x + dx;
-                int ny = pos.y + dy;
+                int nx = pos.X + dx;
+                int ny = pos.Y + dy;
                 if (!InGrid(nx, ny) || Blocked(nx, ny))
                     break;
-                pos = (nx, ny);
+                pos = new Cell(nx, ny);
                 traced.Add(pos);
             }
         }
@@ -327,9 +330,9 @@ public class GridGenerator : IGridGenerator
         return true;
     }
 
-    private bool SimulateMovesOnFullGrid(List<string> moves, out List<(int x, int y)> traced)
+    private bool SimulateMovesOnFullGrid(List<string> moves, out List<Cell> traced)
     {
-        traced = new List<(int x, int y)>();
+        traced = new List<Cell>();
         if (_cells is null || moves.Count == 0) return false;
         var pos = _start; traced.Add(pos);
 
@@ -351,12 +354,12 @@ public class GridGenerator : IGridGenerator
                 default: return false;
             }
 
-            if (IsBlockedFull(pos.x + dx, pos.y + dy)) return false;
+            if (IsBlockedFull(pos.X + dx, pos.Y + dy)) return false;
             while (true)
             {
-                int nx = pos.x + dx, ny = pos.y + dy;
+                int nx = pos.X + dx, ny = pos.Y + dy;
                 if (IsBlockedFull(nx, ny)) break;
-                pos = (nx, ny);
+                pos = new Cell(nx, ny);
                 traced.Add(pos);
             }
         }
@@ -364,12 +367,12 @@ public class GridGenerator : IGridGenerator
         return pos == _end;
     }
 
-    private bool EnforceUniqueness(HashSet<(int x, int y)> mandatoryBlockers, List<(int x, int y)> primaryPath)
+    private bool EnforceUniqueness(HashSet<Cell> mandatoryBlockers, List<Cell> primaryPath)
     {
         if (_cells is null) return false;
         if (!SimulateMovesOnFullGrid(_moves, out _)) return false;
 
-        var forbidden = new HashSet<(int x, int y)>(primaryPath);
+        var forbidden = new HashSet<Cell>(primaryPath);
         foreach (var b in mandatoryBlockers) forbidden.Add(b);
         forbidden.Add(_start); forbidden.Add(_end);
 
@@ -380,21 +383,21 @@ public class GridGenerator : IGridGenerator
                 return true;
             }
 
-            var candidates = new List<(int x, int y)>();
+            var candidates = new List<Cell>();
             for (int i = 1; i < altStops.Count; i++)
             {
                 var a = altStops[i - 1];
                 var b = altStops[i];
-                int dx = Math.Sign(b.x - a.x);
-                int dy = Math.Sign(b.y - a.y);
-                int x = a.x, y = a.y;
+                int dx = Math.Sign(b.X - a.X);
+                int dy = Math.Sign(b.Y - a.Y);
+                int x = a.X, y = a.Y;
                 while (true)
                 {
                     int nx = x + dx, ny = y + dy;
                     if (!InGrid(nx, ny)) break;
                     if (_cells[nx, ny] == CellType.Obstacle) break;
-                    if (nx == b.x && ny == b.y) break;
-                    candidates.Add((nx, ny));
+                    if (nx == b.X && ny == b.Y) break;
+                    candidates.Add(new Cell(nx, ny));
                     x = nx; y = ny;
                 }
             }
@@ -409,14 +412,14 @@ public class GridGenerator : IGridGenerator
             foreach (var c in candidates)
             {
                 if (forbidden.Contains(c)) continue;
-                if (_cells[c.x, c.y] != CellType.Empty && _cells[c.x, c.y] != CellType.Path) continue;
+                if (_cells[c.X, c.Y] != CellType.Empty && _cells[c.X, c.Y] != CellType.Path) continue;
 
-                var prev = _cells[c.x, c.y];
+                var prev = _cells[c.X, c.Y];
 
-                if (!CanPlaceIsolated(c.x, c.y, forbidden))
+                if (!CanPlaceIsolated(c.X, c.Y, forbidden))
                     continue;
 
-                _cells[c.x, c.y] = CellType.Obstacle;
+                _cells[c.X, c.Y] = CellType.Obstacle;
 
                 if (SimulateMovesOnFullGrid(_moves, out _))
                 {
@@ -426,7 +429,7 @@ public class GridGenerator : IGridGenerator
                 }
                 else
                 {
-                    _cells[c.x, c.y] = prev;
+                    _cells[c.X, c.Y] = prev;
                 }
             }
 
@@ -439,35 +442,35 @@ public class GridGenerator : IGridGenerator
         return false;
     }
 
-    private bool FindAlternativeSolutionDistinctFromPrimary(out List<string> altMoves, out List<(int x, int y)> altStops)
+    private bool FindAlternativeSolutionDistinctFromPrimary(out List<string> altMoves, out List<Cell> altStops)
     {
         altMoves = new List<string>();
-        altStops = new List<(int x, int y)>();
+        altStops = new List<Cell>();
         if (_cells is null) return false;
 
-        var transitions = new Dictionary<(int x, int y), List<((int x, int y) to, char m)>>();
-        List<((int x, int y) to, char m)> GetTrans((int x, int y) p)
+        var transitions = new Dictionary<Cell, List<(Cell to, char m)>>();
+        List<(Cell to, char m)> GetTrans(Cell p)
         {
             if (transitions.TryGetValue(p, out var list)) return list;
-            list = new List<((int x, int y), char)>();
+            list = new List<(Cell, char)>();
             foreach (var (dx, dy, ch) in new (int, int, char)[] { (0,-1,'U'), (0,1,'D'), (-1,0,'L'), (1,0,'R') })
             {
-                int x = p.x, y = p.y;
+                int x = p.X, y = p.Y;
                 if (!InGrid(x + dx, y + dy) || _cells[x + dx, y + dy] == CellType.Obstacle) continue;
                 while (InGrid(x + dx, y + dy) && _cells[x + dx, y + dy] != CellType.Obstacle)
                 {
                     x += dx; y += dy;
                 }
-                var to = (x, y);
+                var to = new Cell(x, y);
                 if (to != p) list.Add((to, ch));
             }
             transitions[p] = list;
             return list;
         }
 
-        var dist = new Dictionary<(int x, int y), int>();
-        var parents = new Dictionary<(int x, int y), List<((int x, int y) prev, char m)>>();
-        var q = new Queue<(int x, int y)>();
+        var dist = new Dictionary<Cell, int>();
+        var parents = new Dictionary<Cell, List<(Cell prev, char m)>>();
+        var q = new Queue<Cell>();
         dist[_start] = 0; parents[_start] = new(); q.Enqueue(_start);
 
         while (q.Count > 0)
@@ -480,7 +483,7 @@ public class GridGenerator : IGridGenerator
                 if (!dist.ContainsKey(v))
                 {
                     dist[v] = du + 1;
-                    parents[v] = new List<((int x, int y), char)> { (u, m) };
+                    parents[v] = new List<(Cell, char)> { (u, m) };
                     q.Enqueue(v);
                 }
                 else if (dist[v] == du + 1)
@@ -497,10 +500,10 @@ public class GridGenerator : IGridGenerator
 
         List<string> primary = _moves;
 
-        (List<string> seq, List<(int x, int y)> stops) ReconstructOne()
+        (List<string> seq, List<Cell> stops) ReconstructOne()
         {
             var seq = new List<char>();
-            var stops = new List<(int x, int y)>();
+            var stops = new List<Cell>();
             var cur = _end; stops.Add(cur);
             while (cur != _start)
             {
@@ -512,13 +515,13 @@ public class GridGenerator : IGridGenerator
             return (new List<string>(seq.ConvertAll(c => c.ToString())), stops);
         }
 
-        bool TryReconstructDifferent(List<string> primarySeq, out List<string> alt, out List<(int x, int y)> stops)
+        bool TryReconstructDifferent(List<string> primarySeq, out List<string> alt, out List<Cell> stops)
         {
             alt = new List<string>(); stops = new();
-            var stack = new Stack<((int x, int y) node, int idx, List<char> seq)>();
+            var stack = new Stack<(Cell node, int idx, List<char> seq)>();
             stack.Push((_end, 0, new List<char>()));
 
-            var visitedBranch = new HashSet<((int x, int y), int)>();
+            var visitedBranch = new HashSet<(Cell, int)>();
 
             while (stack.Count > 0)
             {
@@ -576,11 +579,11 @@ public class GridGenerator : IGridGenerator
         return false;
     }
 
-    private List<(int x, int y)>? BuildZigZagAnchors(int targetMoves)
+    private List<Cell>? BuildZigZagAnchors(int targetMoves)
     {
-        var anchors = new List<(int x, int y)> { _start };
+        var anchors = new List<Cell> { _start };
 
-        bool startTopBottom = _start.y == 0 || _start.y == _height - 1;
+        bool startTopBottom = _start.Y == 0 || _start.Y == _height - 1;
         bool horizontal = startTopBottom;
 
         int min = 1, maxX = _width - 2, maxY = _height - 2;
@@ -592,9 +595,9 @@ public class GridGenerator : IGridGenerator
             {
                 int col = _rng.Next(min, maxX + 1);
                 int guard = 200;
-                while (guard-- > 0 && (col == current.x || col == _end.x))
+                while (guard-- > 0 && (col == current.X || col == _end.X))
                     col = _rng.Next(min, maxX + 1);
-                var next = (col, current.y);
+                var next = new Cell(col, current.Y);
                 anchors.Add(next);
                 current = next;
             }
@@ -602,9 +605,9 @@ public class GridGenerator : IGridGenerator
             {
                 int row = _rng.Next(min, maxY + 1);
                 int guard = 200;
-                while (guard-- > 0 && (row == current.y || row == _end.y))
+                while (guard-- > 0 && (row == current.Y || row == _end.Y))
                     row = _rng.Next(min, maxY + 1);
-                var next = (current.x, row);
+                var next = new Cell(current.X, row);
                 anchors.Add(next);
                 current = next;
             }
@@ -612,27 +615,28 @@ public class GridGenerator : IGridGenerator
         }
 
         var last = anchors[^1];
-        if (!(last.x == _end.x || last.y == _end.y))
+        if (!(last.X == _end.X || last.Y == _end.Y))
         {
             if (horizontal)
-                anchors[^1] = (last.x, _end.y);
+                anchors[^1] = new Cell(last.X, _end.Y);
             else
-                anchors[^1] = (_end.x, last.y);
+                anchors[^1] = new Cell(_end.X, last.Y);
         }
         anchors.Add(_end);
 
         for (int i = 0; i < anchors.Count - 1; i++)
         {
             var a = anchors[i]; var b = anchors[i + 1];
-            if (!(a.x == b.x || a.y == b.y)) return null;
+            if (!(a.X == b.X || a.Y == b.Y)) return null;
 
-            int dx = Math.Sign(b.x - a.x), dy = Math.Sign(b.y - a.y);
-            int sx = b.x + dx, sy = b.y + dy;
+            int dx = Math.Sign(b.X - a.X), dy = Math.Sign(b.Y - a.Y);
+            int sx = b.X + dx, sy = b.Y + dy;
             if (InGrid(sx, sy) == false)
             {
                 if (b != _end) return null;
             }
-            if ((sx, sy) == _start || (sx, sy) == _end) return null;
+            var aroundB = new Cell(sx, sy);
+            if (aroundB == _start || aroundB == _end) return null;
         }
 
         return anchors;

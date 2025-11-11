@@ -5,11 +5,11 @@ public class Grid
     public int Width;
     public int Height;
     public CellType[,] Cells;
-    public (int x, int y) Start;
-    public (int x, int y) End;
+    public Cell Start;
+    public Cell End;
     public List<string> Moves;
 
-    public Grid(int width, int height, CellType[,] cells, (int x, int y) start, (int x, int y) end, List<string> moves)
+    public Grid(int width, int height, CellType[,] cells, Cell start, Cell end, List<string> moves)
     {
         Width = width;
         Height = height;

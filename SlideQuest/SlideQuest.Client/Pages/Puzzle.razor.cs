@@ -14,9 +14,9 @@ public class PuzzlePresenter : ComponentBase
     protected int _width;
     protected int _height;
     protected CellType[,]? _grid;
-    protected (int x, int y) _start;
-    protected (int x, int y) _end;
-    protected (int x, int y) _player;
+    protected Cell _start;
+    protected Cell _end;
+    protected Cell _player;
     protected bool _won;
     protected List<string> _moves = new();
 
@@ -85,7 +85,7 @@ public class PuzzlePresenter : ComponentBase
             x = nx; y = ny;
         }
 
-        _player = (x, y);
+        _player = new Cell(x, y);
         if (_player == _end) _won = true;
         StateHasChanged();
     }

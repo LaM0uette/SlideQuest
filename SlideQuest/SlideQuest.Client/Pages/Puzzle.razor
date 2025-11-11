@@ -51,7 +51,7 @@
                     CellType.Obstacle => "obstacle",
                     _ => "empty"
                 };
-                var isPlayer = (_player.x == x && _player.y == y);
+                var isPlayer = (_player.X == x && _player.Y == y);
                 <div class="cell @cls @(isPlayer ? "player" : string.Empty)" title="(@x,@y)"></div>
             }
         }
