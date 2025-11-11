@@ -83,16 +83,64 @@ public class PuzzlePresenter : ComponentBase
         int maxW = Math.Clamp(_maxWidth, minCap, cap);
         int maxH = Math.Clamp(_maxHeight, minCap, cap);
 
+        // Dimensions demandées pour la génération
         int reqW = _rng.Next(minCap, maxW + 1);
         int reqH = _rng.Next(minCap, maxH + 1);
-        
-        _grid = _gridGenerator.Generate(reqW, reqH);
+
+        // Réessayer automatiquement si une génération échoue (pas de chemin/obstacles)
+        const int maxAttempts = 5;
+        Grid? generated = null;
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            try
+            {
+                generated = _gridGenerator.Generate(reqW, reqH);
+                if (generated is null)
+                    continue;
+
+                // Validation basique: au moins 1 mouvement et Start/End placés
+                bool hasMoves = generated.Moves is { Count: > 0 };
+                bool hasPathOrObstacle = false;
+                for (int y = 0; y < generated.Height && !hasPathOrObstacle; y++)
+                for (int x = 0; x < generated.Width && !hasPathOrObstacle; x++)
+                {
+                    var c = generated.Cells[x, y];
+                    if (c == CellType.Path || c == CellType.Obstacle) hasPathOrObstacle = true;
+                }
+
+                if (hasMoves && hasPathOrObstacle)
+                    break; // OK
+
+                generated = null; // force retry
+            }
+            catch (Exception)
+            {
+                // Échec de génération: on retente
+                generated = null;
+            }
+        }
+
+        if (generated is null)
+        {
+            // Dernier recours: relancer une demande avec d'autres dimensions dans la même plage
+            try
+            {
+                generated = _gridGenerator.Generate(_rng.Next(minCap, maxW + 1), _rng.Next(minCap, maxH + 1));
+            }
+            catch
+            {
+                // reste null, on laisse l'UI inchangée
+            }
+        }
+
+        if (generated is null)
+            return; // pas de grille exploitable, rien ne change
+
+        _grid = generated;
         _width = _grid.Width;
         _height = _grid.Height;
         _player = _grid.Start;
-        
         _won = false;
-        
         StateHasChanged();
     }
 

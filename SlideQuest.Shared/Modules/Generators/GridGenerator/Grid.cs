@@ -1,15 +1,18 @@
-﻿namespace GridGenerator;
+﻿using SlideQuest.Shared.Enums;
+
+namespace GridGenerator;
 
 public class Grid
 {
-    public int Width;
-    public int Height;
-    public CellType[,] Cells;
-    public Cell Start;
-    public Cell End;
-    public List<string> Moves;
+    public readonly int Width;
+    public readonly int Height;
+    public readonly CellType[,] Cells;
+    
+    public readonly Cell Start;
+    public readonly Cell End;
+    public readonly List<Direction> Moves;
 
-    public Grid(int width, int height, CellType[,] cells, Cell start, Cell end, List<string> moves)
+    public Grid(int width, int height, CellType[,] cells, Cell start, Cell end, List<Direction> moves)
     {
         Width = width;
         Height = height;

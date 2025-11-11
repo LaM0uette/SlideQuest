@@ -1,4 +1,6 @@
-﻿namespace GridGenerator;
+﻿using SlideQuest.Shared.Enums;
+
+namespace GridGenerator;
 
 public class GridGenerator : IGridGenerator
 {
@@ -9,7 +11,7 @@ public class GridGenerator : IGridGenerator
     private Cell _start;
     private Cell _end;
     private readonly Random _rng = new();
-    private List<string> _moves = [];
+    private List<Direction> _moves = [];
 
     public Grid Generate(int width, int height)
     {
@@ -97,28 +99,28 @@ public class GridGenerator : IGridGenerator
             withBorder[endBorder.X, endBorder.Y] = CellType.End;
 
             // 4) Ajuster la suite de mouvements pour démarrer au Start de bordure et finir à l'End de bordure
-            List<string> finalMoves = new List<string>(_moves);
-            char InwardFromStart()
+            List<Direction> finalMoves = new List<Direction>(_moves);
+            Direction InwardFromStart()
             {
-                if (_start.Y == 0) return 'D';
-                if (_start.Y == _height - 1) return 'U';
-                if (_start.X == 0) return 'R';
-                return 'L'; // _start.X == _width-1
+                if (_start.Y == 0) return Direction.Bottom;
+                if (_start.Y == _height - 1) return Direction.Top;
+                if (_start.X == 0) return Direction.Right;
+                return Direction.Left; // _start.X == _width-1
             }
-            char OutwardToEnd()
+            Direction OutwardToEnd()
             {
-                if (_end.Y == 0) return 'U';
-                if (_end.Y == _height - 1) return 'D';
-                if (_end.X == 0) return 'L';
-                return 'R'; // _end.X == _width-1
+                if (_end.Y == 0) return Direction.Top;
+                if (_end.Y == _height - 1) return Direction.Bottom;
+                if (_end.X == 0) return Direction.Left;
+                return Direction.Right; // _end.X == _width-1
             }
-            if (finalMoves.Count == 0 || finalMoves[0].Length == 0 || finalMoves[0][0] != InwardFromStart())
-                finalMoves.Insert(0, InwardFromStart().ToString());
-            if (finalMoves.Count == 0 || finalMoves[^1].Length == 0 || finalMoves[^1][0] != OutwardToEnd())
-                finalMoves.Add(OutwardToEnd().ToString());
+            if (finalMoves.Count == 0 || finalMoves[0] != InwardFromStart())
+                finalMoves.Insert(0, InwardFromStart());
+            if (finalMoves.Count == 0 || finalMoves[^1] != OutwardToEnd())
+                finalMoves.Add(OutwardToEnd());
 
             // 5) Simuler les mouvements sur la grille avec bordure pour garantir la faisabilité
-            bool SimulateOn(CellType[,] grid, Cell s, Cell e, List<string> moves, out List<Cell> traced)
+            bool SimulateOn(CellType[,] grid, Cell s, Cell e, List<Direction> moves, out List<Cell> traced)
             {
                 traced = new List<Cell>();
                 int w = grid.GetLength(0), h = grid.GetLength(1);
@@ -130,15 +132,15 @@ public class GridGenerator : IGridGenerator
                 }
                 Cell pos = s;
                 traced.Add(pos);
-                foreach (string m in moves)
+                foreach (Direction m in moves)
                 {
                     int dx = 0, dy = 0;
                     switch (m)
                     {
-                        case "U": dy = -1; break;
-                        case "D": dy = 1; break;
-                        case "L": dx = -1; break;
-                        case "R": dx = 1; break;
+                        case Direction.Top: dy = -1; break;
+                        case Direction.Bottom: dy = 1; break;
+                        case Direction.Left: dx = -1; break;
+                        case Direction.Right: dx = 1; break;
                         default: return false;
                     }
                     // Le premier pas doit être possible
@@ -177,29 +179,9 @@ public class GridGenerator : IGridGenerator
             return new Grid(outW, outH, withBorder, startBorder, endBorder, finalMoves);
         }
 
-        // En cas d'échec après plusieurs tentatives, fallback minimal: grille vide avec bordure
-        int fbOutW = width + 2;
-        int fbOutH = height + 2;
-        CellType[,] fbCells = new CellType[fbOutW, fbOutH];
-        for (int y = 0; y < fbOutH; y++)
-            for (int x = 0; x < fbOutW; x++)
-                fbCells[x, y] = CellType.Empty;
-        for (int x = 0; x < fbOutW; x++)
-        {
-            fbCells[x, 0] = CellType.Obstacle;
-            fbCells[x, fbOutH - 1] = CellType.Obstacle;
-        }
-        for (int y = 0; y < fbOutH; y++)
-        {
-            fbCells[0, y] = CellType.Obstacle;
-            fbCells[fbOutW - 1, y] = CellType.Obstacle;
-        }
-        int midX = fbOutW / 2;
-        Cell fbStart = new Cell(midX, 0);               // sur la bordure haute
-        Cell fbEnd = new Cell(midX, fbOutH - 1);        // sur la bordure basse
-        fbCells[fbStart.X, fbStart.Y] = CellType.Start;  // remplace l'obstacle
-        fbCells[fbEnd.X, fbEnd.Y] = CellType.End;        // remplace l'obstacle
-        return new Grid(fbOutW, fbOutH, fbCells, fbStart, fbEnd, []);
+        // En cas d'échec après plusieurs tentatives, ne pas retourner une grille vide non jouable.
+        // On signale l'échec au caller pour qu'il relance une génération.
+        throw new InvalidOperationException("Grid generation failed after maximum attempts");
     }
 
     #region Private helpers
@@ -322,16 +304,16 @@ public class GridGenerator : IGridGenerator
             Cell cur = path[i];
             int dx = Math.Sign(cur.X - prev.X);
             int dy = Math.Sign(cur.Y - prev.Y);
-            char dir = dx switch { > 0 => 'R', < 0 => 'L', _ => (dy > 0 ? 'D' : 'U') };
+            Direction dir = dx switch { > 0 => Direction.Right, < 0 => Direction.Left, _ => (dy > 0 ? Direction.Bottom : Direction.Top) };
             while (i < path.Count)
             {
                 Cell p = path[i - 1]; Cell c = path[i];
                 int dx2 = Math.Sign(c.X - p.X); int dy2 = Math.Sign(c.Y - p.Y);
-                char dir2 = dx2 switch { > 0 => 'R', < 0 => 'L', _ => (dy2 > 0 ? 'D' : 'U') };
+                Direction dir2 = dx2 switch { > 0 => Direction.Right, < 0 => Direction.Left, _ => (dy2 > 0 ? Direction.Bottom : Direction.Top) };
                 if (dir2 != dir) break;
                 i++;
             }
-            _moves.Add(dir.ToString());
+            _moves.Add(dir);
         }
     }
 
@@ -431,7 +413,7 @@ public class GridGenerator : IGridGenerator
         return c;
     }
 
-    private bool SimulateMovesAndTrace(List<string> moves, HashSet<Cell> blockers, out List<Cell> traced)
+    private bool SimulateMovesAndTrace(List<Direction> moves, HashSet<Cell> blockers, out List<Cell> traced)
     {
         traced = [];
         if (moves.Count == 0) return false;
@@ -444,15 +426,15 @@ public class GridGenerator : IGridGenerator
         Cell pos = _start;
         traced.Add(pos);
 
-        foreach (string m in moves)
+        foreach (Direction m in moves)
         {
             int dx = 0, dy = 0;
             switch (m)
             {
-                case "U": dy = -1; break;
-                case "D": dy = 1; break;
-                case "L": dx = -1; break;
-                case "R": dx = 1; break;
+                case Direction.Top: dy = -1; break;
+                case Direction.Bottom: dy = 1; break;
+                case Direction.Left: dx = -1; break;
+                case Direction.Right: dx = 1; break;
                 default: return false;
             }
 
@@ -473,7 +455,7 @@ public class GridGenerator : IGridGenerator
         return true;
     }
 
-    private bool SimulateMovesOnFullGrid(List<string> moves, out List<Cell> traced)
+    private bool SimulateMovesOnFullGrid(List<Direction> moves, out List<Cell> traced)
     {
         traced = [];
         if (_cells is null || moves.Count == 0) return false;
@@ -485,15 +467,15 @@ public class GridGenerator : IGridGenerator
             return _cells![x, y] == CellType.Obstacle;
         }
 
-        foreach (string m in moves)
+        foreach (Direction m in moves)
         {
             int dx = 0, dy = 0;
             switch (m)
             {
-                case "U": dy = -1; break;
-                case "D": dy = 1; break;
-                case "L": dx = -1; break;
-                case "R": dx = 1; break;
+                case Direction.Top: dy = -1; break;
+                case Direction.Bottom: dy = 1; break;
+                case Direction.Left: dx = -1; break;
+                case Direction.Right: dx = 1; break;
                 default: return false;
             }
 
@@ -521,7 +503,7 @@ public class GridGenerator : IGridGenerator
 
         for (int iter = 0; iter < _width * _height; iter++)
         {
-            if (!FindAlternativeSolutionDistinctFromPrimary(out List<string> altMoves, out List<Cell> altStops))
+            if (!FindAlternativeSolutionDistinctFromPrimary(out List<Direction> altMoves, out List<Cell> altStops))
             {
                 return true;
             }
@@ -585,7 +567,7 @@ public class GridGenerator : IGridGenerator
         return false;
     }
 
-    private bool FindAlternativeSolutionDistinctFromPrimary(out List<string> altMoves, out List<Cell> altStops)
+    private bool FindAlternativeSolutionDistinctFromPrimary(out List<Direction> altMoves, out List<Cell> altStops)
     {
         altMoves = [];
         altStops = [];
@@ -612,7 +594,7 @@ public class GridGenerator : IGridGenerator
         }
 
         Dictionary<Cell, int> dist = new Dictionary<Cell, int>();
-        Dictionary<Cell, List<(Cell prev, char m)>> parents = new Dictionary<Cell, List<(Cell prev, char m)>>();
+        Dictionary<Cell, List<(Cell prev, char m)>> parents = new Dictionary<Cell, List<(Cell prev, char m)>>() ;
         Queue<Cell> q = new Queue<Cell>();
         dist[_start] = 0; parents[_start] = []; q.Enqueue(_start);
 
@@ -641,9 +623,9 @@ public class GridGenerator : IGridGenerator
 
         if (!dist.ContainsKey(_end)) return false;
 
-        List<string> primary = _moves;
+        List<Direction> primary = _moves;
 
-        (List<string> seq, List<Cell> stops) ReconstructOne()
+        (List<Direction> seq, List<Cell> stops) ReconstructOne()
         {
             List<char> seq = [];
             List<Cell> stops = [];
@@ -655,10 +637,11 @@ public class GridGenerator : IGridGenerator
                 cur = pr.prev; stops.Add(cur);
             }
             seq.Reverse(); stops.Reverse();
-            return ([..seq.ConvertAll(c => c.ToString())], stops);
+            List<Direction> seqDir = seq.ConvertAll(c => c switch { 'U' => Direction.Top, 'D' => Direction.Bottom, 'L' => Direction.Left, 'R' => Direction.Right, _ => Direction.Top });
+            return (seqDir, stops);
         }
 
-        bool TryReconstructDifferent(List<string> primarySeq, out List<string> alt, out List<Cell> stops)
+        bool TryReconstructDifferent(List<Direction> primarySeq, out List<Direction> alt, out List<Cell> stops)
         {
             alt = []; stops = [];
             Stack<(Cell node, int idx, List<char> seq)> stack = new Stack<(Cell node, int idx, List<char> seq)>();
@@ -672,14 +655,14 @@ public class GridGenerator : IGridGenerator
                 if (node == _start)
                 {
                     List<char> s = new List<char>(seq); s.Reverse();
-                    List<string> sStr = s.ConvertAll(c => c.ToString());
-                    if (sStr.Count == primarySeq.Count)
+                    List<Direction> sDir = s.ConvertAll(c => c switch { 'U' => Direction.Top, 'D' => Direction.Bottom, 'L' => Direction.Left, 'R' => Direction.Right, _ => Direction.Top });
+                    if (sDir.Count == primarySeq.Count)
                     {
                         bool equal = true;
-                        for (int i = 0; i < sStr.Count; i++) if (sStr[i] != primarySeq[i]) { equal = false; break; }
+                        for (int i = 0; i < sDir.Count; i++) if (sDir[i] != primarySeq[i]) { equal = false; break; }
                         if (!equal)
                         {
-                            alt = sStr;
+                            alt = sDir;
                             SimulateMovesOnFullGrid(alt, out List<Cell> traced);
                             stops = traced;
                             return true;
@@ -704,7 +687,7 @@ public class GridGenerator : IGridGenerator
             return false;
         }
 
-        (List<string> seq, List<Cell> stops) one = ReconstructOne();
+        (List<Direction> seq, List<Cell> stops) one = ReconstructOne();
         if (one.seq.Count == primary.Count)
         {
             bool same = true; for (int i = 0; i < one.seq.Count; i++) if (one.seq[i] != primary[i]) { same = false; break; }
@@ -714,7 +697,7 @@ public class GridGenerator : IGridGenerator
             }
         }
 
-        if (TryReconstructDifferent(primary, out List<string> alt, out List<Cell> stops2))
+        if (TryReconstructDifferent(primary, out List<Direction> alt, out List<Cell> stops2))
         {
             altMoves = alt; altStops = stops2; return true;
         }

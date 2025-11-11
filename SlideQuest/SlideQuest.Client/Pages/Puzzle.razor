@@ -72,8 +72,13 @@
     }
 
     <div class="moves" hidden="@(_grid.Moves.Count == 0)">
-        <h4>Suite de mouvements (U/D/L/R) pour résoudre:</h4>
-        <p>@string.Join(" ", _grid.Moves)</p>
+        <h4>Suite de mouvements (flèches) pour résoudre:</h4>
+        <p>
+            @foreach (var m in _grid.Moves)
+            {
+                @:(@(m switch { SlideQuest.Shared.Enums.Direction.Top => "⬆️", SlideQuest.Shared.Enums.Direction.Bottom => "⬇️", SlideQuest.Shared.Enums.Direction.Left => "⬅️", SlideQuest.Shared.Enums.Direction.Right => "➡️", _ => "" })) 
+            }
+        </p>
     </div>
 }
 else
