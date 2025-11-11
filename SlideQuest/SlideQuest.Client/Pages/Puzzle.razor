@@ -1,4 +1,5 @@
 ﻿@page "/puzzle"
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
 @inherits PuzzlePresenter
 
 <PageTitle>Puzzle Glace</PageTitle>
@@ -37,10 +38,10 @@
         <small>Clavier: flèches / WASD / ZQSD</small>
     </div>
 
-    <div class="grid focusable" tabindex="0" @onkeydown="OnKeyDown" style="--n: @_n">
-        @for (int y = 0; y < _n; y++)
+    <div class="grid focusable" tabindex="0" @onkeydown="OnKeyDown" style="--n: @_width">
+        @for (int y = 0; y < _height; y++)
         {
-            @for (int x = 0; x < _n; x++)
+            @for (int x = 0; x < _width; x++)
             {
                 var cls = _grid[x, y] switch
                 {

@@ -1,4 +1,5 @@
 using System.Globalization;
+using GridGenerator;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using SlideQuest.Client.Services;
 
@@ -13,5 +14,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 // SignalR hub client DI (concrete registered for interface)
 builder.Services.AddSingleton<IGameHubClient, GameHubClient>();
+
+builder.Services.AddSingleton<IGridGenerator, GridGenerator.GridGenerator>();
 
 await builder.Build().RunAsync();

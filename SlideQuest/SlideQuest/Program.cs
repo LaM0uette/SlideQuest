@@ -1,4 +1,5 @@
 using System.Globalization;
+using GridGenerator;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using SlideQuest.Components;
@@ -37,6 +38,8 @@ builder.Services.AddHttpClient();
 
 // Register a fake hub client on the server to satisfy DI during prerendering
 builder.Services.AddSingleton<IGameHubClient, FakeGameHubClient>();
+
+builder.Services.AddSingleton<IGridGenerator, FakeGridGenerator>();
 
 
 // Swagger/OpenAPI to test the endpoint
