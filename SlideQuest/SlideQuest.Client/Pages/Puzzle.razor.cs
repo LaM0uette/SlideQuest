@@ -83,10 +83,12 @@ public class PuzzlePresenter : ComponentBase
         int maxW = Math.Clamp(_maxWidth, minCap, cap);
         int maxH = Math.Clamp(_maxHeight, minCap, cap);
 
-        _width = _rng.Next(minCap, maxW + 1);
-        _height = _rng.Next(minCap, maxH + 1);
+        int reqW = _rng.Next(minCap, maxW + 1);
+        int reqH = _rng.Next(minCap, maxH + 1);
         
-        _grid = _gridGenerator.Generate(_width, _height);
+        _grid = _gridGenerator.Generate(reqW, reqH);
+        _width = _grid.Width;
+        _height = _grid.Height;
         _player = _grid.Start;
         
         _won = false;

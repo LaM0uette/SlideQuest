@@ -13,6 +13,7 @@ public class GridGenerator : IGridGenerator
 
     public Grid Generate(int width, int height)
     {
+        // 1) Générer la carte comme avant (sans bordure), avec chemin garanti, obstacles et mouvements
         _width = width;
         _height = height;
 
@@ -46,14 +47,159 @@ public class GridGenerator : IGridGenerator
             if (!EnforceUniqueness(blockers, pathCells))
                 continue;
 
-            return new Grid(_width, _height, _cells, _start, _end, [.._moves]);
+            // 2) Ajouter une bordure supplémentaire tout autour (+1 de chaque côté)
+            int outW = _width + 2;
+            int outH = _height + 2;
+            CellType[,] withBorder = new CellType[outW, outH];
+
+            // initialiser à Empty
+            for (int y = 0; y < outH; y++)
+                for (int x = 0; x < outW; x++)
+                    withBorder[x, y] = CellType.Empty;
+
+            // Bordure en obstacles
+            for (int x = 0; x < outW; x++)
+            {
+                withBorder[x, 0] = CellType.Obstacle;               // haut
+                withBorder[x, outH - 1] = CellType.Obstacle;        // bas
+            }
+            for (int y = 0; y < outH; y++)
+            {
+                withBorder[0, y] = CellType.Obstacle;               // gauche
+                withBorder[outW - 1, y] = CellType.Obstacle;        // droite
+            }
+
+            // Copier la grille générée au centre avec un décalage (+1, +1)
+            for (int y = 0; y < _height; y++)
+                for (int x = 0; x < _width; x++)
+                    withBorder[x + 1, y + 1] = _cells[x, y];
+
+            // Placer Start/End sur les cases de la bordure
+            // 1) Nettoyer les positions intérieures copiées (+1,+1)
+            withBorder[_start.X + 1, _start.Y + 1] = CellType.Path;
+            withBorder[_end.X + 1, _end.Y + 1] = CellType.Path;
+
+            // 2) Calculer les positions sur la bordure correspondantes au côté d'origine
+            Cell startBorder;
+            if (_start.X == 0) startBorder = new Cell(0, _start.Y + 1);               // côté gauche → x=0
+            else if (_start.X == _width - 1) startBorder = new Cell(outW - 1, _start.Y + 1); // côté droit → x=max
+            else if (_start.Y == 0) startBorder = new Cell(_start.X + 1, 0);           // côté haut → y=0
+            else startBorder = new Cell(_start.X + 1, outH - 1);                        // côté bas → y=max
+
+            Cell endBorder;
+            if (_end.X == 0) endBorder = new Cell(0, _end.Y + 1);
+            else if (_end.X == _width - 1) endBorder = new Cell(outW - 1, _end.Y + 1);
+            else if (_end.Y == 0) endBorder = new Cell(_end.X + 1, 0);
+            else endBorder = new Cell(_end.X + 1, outH - 1);
+
+            // 3) Marquer Start/End sur la bordure (écrase l'obstacle à ces emplacements)
+            withBorder[startBorder.X, startBorder.Y] = CellType.Start;
+            withBorder[endBorder.X, endBorder.Y] = CellType.End;
+
+            // 4) Ajuster la suite de mouvements pour démarrer au Start de bordure et finir à l'End de bordure
+            List<string> finalMoves = new List<string>(_moves);
+            char InwardFromStart()
+            {
+                if (_start.Y == 0) return 'D';
+                if (_start.Y == _height - 1) return 'U';
+                if (_start.X == 0) return 'R';
+                return 'L'; // _start.X == _width-1
+            }
+            char OutwardToEnd()
+            {
+                if (_end.Y == 0) return 'U';
+                if (_end.Y == _height - 1) return 'D';
+                if (_end.X == 0) return 'L';
+                return 'R'; // _end.X == _width-1
+            }
+            if (finalMoves.Count == 0 || finalMoves[0].Length == 0 || finalMoves[0][0] != InwardFromStart())
+                finalMoves.Insert(0, InwardFromStart().ToString());
+            if (finalMoves.Count == 0 || finalMoves[^1].Length == 0 || finalMoves[^1][0] != OutwardToEnd())
+                finalMoves.Add(OutwardToEnd().ToString());
+
+            // 5) Simuler les mouvements sur la grille avec bordure pour garantir la faisabilité
+            bool SimulateOn(CellType[,] grid, Cell s, Cell e, List<string> moves, out List<Cell> traced)
+            {
+                traced = new List<Cell>();
+                int w = grid.GetLength(0), h = grid.GetLength(1);
+                bool InBounds(int x, int y) => x >= 0 && y >= 0 && x < w && y < h;
+                bool IsBlocked(int x, int y)
+                {
+                    if (!InBounds(x, y)) return true;
+                    return grid[x, y] == CellType.Obstacle;
+                }
+                Cell pos = s;
+                traced.Add(pos);
+                foreach (string m in moves)
+                {
+                    int dx = 0, dy = 0;
+                    switch (m)
+                    {
+                        case "U": dy = -1; break;
+                        case "D": dy = 1; break;
+                        case "L": dx = -1; break;
+                        case "R": dx = 1; break;
+                        default: return false;
+                    }
+                    // Le premier pas doit être possible
+                    if (IsBlocked(pos.X + dx, pos.Y + dy)) return false;
+                    while (true)
+                    {
+                        int nx = pos.X + dx, ny = pos.Y + dy;
+                        if (IsBlocked(nx, ny)) break;
+                        pos = new Cell(nx, ny);
+                        traced.Add(pos);
+                    }
+                }
+                return pos == e;
+            }
+
+            if (!SimulateOn(withBorder, startBorder, endBorder, finalMoves, out List<Cell> tracedBorder))
+            {
+                // Séquence non faisable (ex: premier pas impossible ou fin != End) → retenter une génération
+                continue;
+            }
+
+            // 6) Nettoyer les anciens chemins et peindre le chemin réellement parcouru
+            for (int y = 0; y < outH; y++)
+                for (int x = 0; x < outW; x++)
+                    if (withBorder[x, y] == CellType.Path)
+                        withBorder[x, y] = CellType.Empty;
+            foreach (Cell c in tracedBorder)
+            {
+                if ((c.X == startBorder.X && c.Y == startBorder.Y) || (c.X == endBorder.X && c.Y == endBorder.Y))
+                    continue;
+                if (withBorder[c.X, c.Y] == CellType.Empty)
+                    withBorder[c.X, c.Y] = CellType.Path;
+            }
+
+            // Retourner la grille finale (avec bordure) et les mouvements validés
+            return new Grid(outW, outH, withBorder, startBorder, endBorder, finalMoves);
         }
 
-        // Fallback empty grid
-        _cells = new CellType[width, height];
-        _start = new Cell(0, 0);
-        _end = new Cell(width - 1, height - 1);
-        return new Grid(width, height, _cells, _start, _end, []);
+        // En cas d'échec après plusieurs tentatives, fallback minimal: grille vide avec bordure
+        int fbOutW = width + 2;
+        int fbOutH = height + 2;
+        CellType[,] fbCells = new CellType[fbOutW, fbOutH];
+        for (int y = 0; y < fbOutH; y++)
+            for (int x = 0; x < fbOutW; x++)
+                fbCells[x, y] = CellType.Empty;
+        for (int x = 0; x < fbOutW; x++)
+        {
+            fbCells[x, 0] = CellType.Obstacle;
+            fbCells[x, fbOutH - 1] = CellType.Obstacle;
+        }
+        for (int y = 0; y < fbOutH; y++)
+        {
+            fbCells[0, y] = CellType.Obstacle;
+            fbCells[fbOutW - 1, y] = CellType.Obstacle;
+        }
+        int midX = fbOutW / 2;
+        Cell fbStart = new Cell(midX, 0);               // sur la bordure haute
+        Cell fbEnd = new Cell(midX, fbOutH - 1);        // sur la bordure basse
+        fbCells[fbStart.X, fbStart.Y] = CellType.Start;  // remplace l'obstacle
+        fbCells[fbEnd.X, fbEnd.Y] = CellType.End;        // remplace l'obstacle
+        return new Grid(fbOutW, fbOutH, fbCells, fbStart, fbEnd, []);
     }
 
     #region Private helpers
