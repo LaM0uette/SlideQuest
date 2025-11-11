@@ -10,14 +10,19 @@ public class GridGenerator : IGridGenerator
     private CellType[,]? _cells;
     private Cell _start;
     private Cell _end;
-    private readonly Random _rng = new();
+    private Random _rng = new();
     private List<Direction> _moves = [];
+    private int _seed;
 
-    public Grid Generate(int width, int height)
+    public Grid Generate(int width, int height, int? seed = null)
     {
         // 1) Générer la carte comme avant (sans bordure), avec chemin garanti, obstacles et mouvements
         _width = width;
         _height = height;
+
+        // Initialize RNG deterministically from provided seed, or randomize a new one
+        _seed = seed ?? Random.Shared.Next(int.MinValue, int.MaxValue);
+        _rng = new Random(_seed);
 
         for (int attempt = 0; attempt < 150; attempt++)
         {
@@ -176,7 +181,7 @@ public class GridGenerator : IGridGenerator
             }
 
             // Retourner la grille finale (avec bordure) et les mouvements validés
-            return new Grid(outW, outH, withBorder, startBorder, endBorder, finalMoves);
+            return new Grid(outW, outH, withBorder, startBorder, endBorder, finalMoves, _seed);
         }
 
         // En cas d'échec après plusieurs tentatives, ne pas retourner une grille vide non jouable.

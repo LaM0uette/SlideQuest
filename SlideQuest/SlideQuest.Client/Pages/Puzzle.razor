@@ -21,6 +21,9 @@
     <label style="margin-left:1rem;">Max hauteur:</label>
     <input type="number" min="@Min" max="@CapFor(_difficulty)" @bind="_maxHeight" style="width:5rem;" />
 
+    <label style="margin-left:1rem;">Seed:</label>
+    <input type="text" @bind="_seedInput" style="width:8rem;" placeholder="aléatoire" />
+
     <button class="btn" style="margin-left:1rem;" @onclick="Generate">Générer</button>
 </div>
 
@@ -79,6 +82,7 @@
                 @:(@(m switch { SlideQuest.Shared.Enums.Direction.Top => "⬆️", SlideQuest.Shared.Enums.Direction.Bottom => "⬇️", SlideQuest.Shared.Enums.Direction.Left => "⬅️", SlideQuest.Shared.Enums.Direction.Right => "➡️", _ => "" })) 
             }
         </p>
+        <p><small>Seed utilisée: @_grid.Seed</small></p>
     </div>
 }
 else

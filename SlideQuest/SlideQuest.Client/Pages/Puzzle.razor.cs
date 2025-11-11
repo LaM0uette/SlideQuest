@@ -35,6 +35,9 @@ public class PuzzlePresenter : ComponentBase
     protected Cell _player;
     protected bool _won;
 
+    // Seed input as raw text; if empty or invalid -> randomize
+    protected string? _seedInput;
+
     private readonly Random _rng = new();
     private const int MinSize = 5; // absolute minimum practical size for a playable grid (Easy level lower bound)
 
@@ -83,9 +86,30 @@ public class PuzzlePresenter : ComponentBase
         int maxW = Math.Clamp(_maxWidth, minCap, cap);
         int maxH = Math.Clamp(_maxHeight, minCap, cap);
 
+        // Parse seed input (keeps the input field untouched)
+        int? parsedSeed = null;
+        if (!string.IsNullOrWhiteSpace(_seedInput) && int.TryParse(_seedInput, out int parsed))
+            parsedSeed = parsed;
+
         // Dimensions demandées pour la génération
-        int reqW = _rng.Next(minCap, maxW + 1);
-        int reqH = _rng.Next(minCap, maxH + 1);
+        int reqW;
+        int reqH;
+        if (parsedSeed.HasValue)
+        {
+            // Dimensions déterministes basées sur la seed fournie
+            Random dimRng = new(parsedSeed.Value);
+            reqW = dimRng.Next(minCap, maxW + 1);
+            reqH = dimRng.Next(minCap, maxH + 1);
+        }
+        else
+        {
+            // Dimensions aléatoires dans la plage
+            reqW = _rng.Next(minCap, maxW + 1);
+            reqH = _rng.Next(minCap, maxH + 1);
+        }
+
+        // Determine seed: use provided if any; otherwise randomize one
+        int seedToUse = parsedSeed ?? Random.Shared.Next(int.MinValue, int.MaxValue);
 
         // Réessayer automatiquement si une génération échoue (pas de chemin/obstacles)
         const int maxAttempts = 5;
@@ -94,7 +118,7 @@ public class PuzzlePresenter : ComponentBase
         {
             try
             {
-                generated = _gridGenerator.Generate(reqW, reqH);
+                generated = _gridGenerator.Generate(reqW, reqH, seedToUse);
                 if (generated is null)
                     continue;
 
@@ -122,10 +146,22 @@ public class PuzzlePresenter : ComponentBase
 
         if (generated is null)
         {
-            // Dernier recours: relancer une demande avec d'autres dimensions dans la même plage
+            // Dernier recours: relancer une demande
             try
             {
-                generated = _gridGenerator.Generate(_rng.Next(minCap, maxW + 1), _rng.Next(minCap, maxH + 1));
+                if (parsedSeed.HasValue)
+                {
+                    // Garder la même seed et les mêmes dimensions déterministes pour garantir la reproductibilité
+                    generated = _gridGenerator.Generate(reqW, reqH, seedToUse);
+                }
+                else
+                {
+                    // Pas de seed saisie: on retente avec d'autres dimensions dans la même plage et une nouvelle seed aléatoire
+                    int altW = _rng.Next(minCap, maxW + 1);
+                    int altH = _rng.Next(minCap, maxH + 1);
+                    int altSeed = Random.Shared.Next(int.MinValue, int.MaxValue);
+                    generated = _gridGenerator.Generate(altW, altH, altSeed);
+                }
             }
             catch
             {
@@ -137,6 +173,7 @@ public class PuzzlePresenter : ComponentBase
             return; // pas de grille exploitable, rien ne change
 
         _grid = generated;
+        // Ne pas remplir/altérer le champ input seed; afficher la seed utilisée séparément via _grid.Seed
         _width = _grid.Width;
         _height = _grid.Height;
         _player = _grid.Start;

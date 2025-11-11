@@ -12,7 +12,9 @@ public class Grid
     public readonly Cell End;
     public readonly List<Direction> Moves;
 
-    public Grid(int width, int height, CellType[,] cells, Cell start, Cell end, List<Direction> moves)
+    public readonly int Seed;
+
+    public Grid(int width, int height, CellType[,] cells, Cell start, Cell end, List<Direction> moves, int seed)
     {
         Width = width;
         Height = height;
@@ -20,5 +22,6 @@ public class Grid
         Start = start;
         End = end;
         Moves = moves;
+        Seed = seed;
     }
 }
