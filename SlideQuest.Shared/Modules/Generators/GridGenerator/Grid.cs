@@ -6,22 +6,24 @@ public class Grid
 {
     public readonly int Width;
     public readonly int Height;
-    public readonly CellType[,] Cells;
+    public readonly int Seed;
     
+    public readonly Cell[,] Cells;
     public readonly Cell Start;
     public readonly Cell End;
+    
     public readonly List<Direction> Moves;
 
-    public readonly int Seed;
-
-    public Grid(int width, int height, CellType[,] cells, Cell start, Cell end, List<Direction> moves, int seed)
+    public Grid(int width, int height, int seed, Cell[,] cells, Cell start, Cell end, List<Direction> moves)
     {
         Width = width;
         Height = height;
+        Seed = seed;
+        
         Cells = cells;
         Start = start;
         End = end;
+        
         Moves = moves;
-        Seed = seed;
     }
 }

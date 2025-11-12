@@ -213,7 +213,7 @@ public class PuzzlePresenter : ComponentBase, IDisposable
                 for (int y = 0; y < generated.Height && !hasPathOrObstacle; y++)
                 for (int x = 0; x < generated.Width && !hasPathOrObstacle; x++)
                 {
-                    var c = generated.Cells[x, y];
+                    var c = generated.Cells[x, y].Type;
                     if (c == CellType.Path || c == CellType.Obstacle) hasPathOrObstacle = true;
                 }
 
@@ -305,7 +305,7 @@ public class PuzzlePresenter : ComponentBase, IDisposable
         if (dx == 0 && dy == 0) 
             return;
         
-        (int x, int y) = _player;
+        var (x, y, _) = _player;
 
         // slide until next cell would be blocked or out of grid
         while (true)
@@ -327,7 +327,7 @@ public class PuzzlePresenter : ComponentBase, IDisposable
         if (_grid is null) 
             return true;
         
-        CellType cell = _grid.Cells[x, y];
+        CellType cell = _grid.Cells[x, y].Type;
         return cell == CellType.Obstacle;
     }
 

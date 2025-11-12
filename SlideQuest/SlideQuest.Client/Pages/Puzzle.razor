@@ -54,7 +54,7 @@
             {
                 @for (int x = 0; x < _width; x++)
                 {
-                    string cls = _grid.Cells[x, y] switch
+                    string cls = _grid.Cells[x, y].Type switch
                     {
                         CellType.Start => "start",
                         CellType.End => "end",

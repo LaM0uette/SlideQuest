@@ -7,7 +7,7 @@ public class GridGenerator : IGridGenerator
     // Internal state for generation
     private int _width;
     private int _height;
-    private CellType[,]? _cells;
+    private Cell[,]? _cells;
     private Cell _start;
     private Cell _end;
     private Random _rng = new();
@@ -26,7 +26,11 @@ public class GridGenerator : IGridGenerator
 
         for (int attempt = 0; attempt < 150; attempt++)
         {
-            _cells = new CellType[_width, _height];
+            _cells = new Cell[_width, _height];
+            // initialiser chaque cellule avec ses coordonnées et Type par défaut Empty
+            for (int y = 0; y < _height; y++)
+                for (int x = 0; x < _width; x++)
+                    _cells[x, y] = new Cell(x, y, CellType.Empty);
             _moves = [];
 
             PickStartEnd();
@@ -40,14 +44,14 @@ public class GridGenerator : IGridGenerator
                 continue;
 
             foreach (Cell c in pathCells)
-                _cells[c.X, c.Y] = CellType.Path;
+                _cells[c.X, c.Y] = new Cell(c.X, c.Y, CellType.Path);
 
             foreach (Cell b in blockers)
-                if (InGrid(b.X, b.Y) && _cells[b.X, b.Y] == CellType.Empty)
-                    _cells[b.X, b.Y] = CellType.Obstacle;
+                if (InGrid(b.X, b.Y) && _cells[b.X, b.Y].Type == CellType.Empty)
+                    _cells[b.X, b.Y] = new Cell(b.X, b.Y, CellType.Obstacle);
 
-            _cells[_start.X, _start.Y] = CellType.Start;
-            _cells[_end.X, _end.Y] = CellType.End;
+            _cells[_start.X, _start.Y] = new Cell(_start.X, _start.Y, CellType.Start);
+            _cells[_end.X, _end.Y] = new Cell(_end.X, _end.Y, CellType.End);
 
             AddRandomObstacles(pathCells, blockers);
 
@@ -57,34 +61,34 @@ public class GridGenerator : IGridGenerator
             // 2) Ajouter une bordure supplémentaire tout autour (+1 de chaque côté)
             int outW = _width + 2;
             int outH = _height + 2;
-            CellType[,] withBorder = new CellType[outW, outH];
+            Cell[,] withBorder = new Cell[outW, outH];
 
-            // initialiser à Empty
+            // initialiser à Empty avec coordonnées
             for (int y = 0; y < outH; y++)
                 for (int x = 0; x < outW; x++)
-                    withBorder[x, y] = CellType.Empty;
+                    withBorder[x, y] = new Cell(x, y, CellType.Empty);
 
             // Bordure en obstacles
             for (int x = 0; x < outW; x++)
             {
-                withBorder[x, 0] = CellType.Obstacle;               // haut
-                withBorder[x, outH - 1] = CellType.Obstacle;        // bas
+                withBorder[x, 0] = new Cell(x, 0, CellType.Obstacle);               // haut
+                withBorder[x, outH - 1] = new Cell(x, outH - 1, CellType.Obstacle);  // bas
             }
             for (int y = 0; y < outH; y++)
             {
-                withBorder[0, y] = CellType.Obstacle;               // gauche
-                withBorder[outW - 1, y] = CellType.Obstacle;        // droite
+                withBorder[0, y] = new Cell(0, y, CellType.Obstacle);                    // gauche
+                withBorder[outW - 1, y] = new Cell(outW - 1, y, CellType.Obstacle);     // droite
             }
 
             // Copier la grille générée au centre avec un décalage (+1, +1)
             for (int y = 0; y < _height; y++)
                 for (int x = 0; x < _width; x++)
-                    withBorder[x + 1, y + 1] = _cells[x, y];
+                    withBorder[x + 1, y + 1] = new Cell(x + 1, y + 1, _cells[x, y].Type);
 
             // Placer Start/End sur les cases de la bordure
             // 1) Nettoyer les positions intérieures copiées (+1,+1)
-            withBorder[_start.X + 1, _start.Y + 1] = CellType.Path;
-            withBorder[_end.X + 1, _end.Y + 1] = CellType.Path;
+            withBorder[_start.X + 1, _start.Y + 1] = new Cell(_start.X + 1, _start.Y + 1, CellType.Path);
+            withBorder[_end.X + 1, _end.Y + 1] = new Cell(_end.X + 1, _end.Y + 1, CellType.Path);
 
             // 2) Calculer les positions sur la bordure correspondantes au côté d'origine
             Cell startBorder;
@@ -100,8 +104,8 @@ public class GridGenerator : IGridGenerator
             else endBorder = new Cell(_end.X + 1, outH - 1);
 
             // 3) Marquer Start/End sur la bordure (écrase l'obstacle à ces emplacements)
-            withBorder[startBorder.X, startBorder.Y] = CellType.Start;
-            withBorder[endBorder.X, endBorder.Y] = CellType.End;
+            withBorder[startBorder.X, startBorder.Y] = new Cell(startBorder.X, startBorder.Y, CellType.Start);
+            withBorder[endBorder.X, endBorder.Y] = new Cell(endBorder.X, endBorder.Y, CellType.End);
 
             // 4) Ajuster la suite de mouvements pour démarrer au Start de bordure et finir à l'End de bordure
             List<Direction> finalMoves = new List<Direction>(_moves);
@@ -125,7 +129,7 @@ public class GridGenerator : IGridGenerator
                 finalMoves.Add(OutwardToEnd());
 
             // 5) Simuler les mouvements sur la grille avec bordure pour garantir la faisabilité
-            bool SimulateOn(CellType[,] grid, Cell s, Cell e, List<Direction> moves, out List<Cell> traced)
+            bool SimulateOn(Cell[,] grid, Cell s, Cell e, List<Direction> moves, out List<Cell> traced)
             {
                 traced = new List<Cell>();
                 int w = grid.GetLength(0), h = grid.GetLength(1);
@@ -133,7 +137,7 @@ public class GridGenerator : IGridGenerator
                 bool IsBlocked(int x, int y)
                 {
                     if (!InBounds(x, y)) return true;
-                    return grid[x, y] == CellType.Obstacle;
+                    return grid[x, y].Type == CellType.Obstacle;
                 }
                 Cell pos = s;
                 traced.Add(pos);
@@ -170,18 +174,18 @@ public class GridGenerator : IGridGenerator
             // 6) Nettoyer les anciens chemins et peindre le chemin réellement parcouru
             for (int y = 0; y < outH; y++)
                 for (int x = 0; x < outW; x++)
-                    if (withBorder[x, y] == CellType.Path)
-                        withBorder[x, y] = CellType.Empty;
+                    if (withBorder[x, y].Type == CellType.Path)
+                        withBorder[x, y] = new Cell(x, y, CellType.Empty);
             foreach (Cell c in tracedBorder)
             {
                 if ((c.X == startBorder.X && c.Y == startBorder.Y) || (c.X == endBorder.X && c.Y == endBorder.Y))
                     continue;
-                if (withBorder[c.X, c.Y] == CellType.Empty)
-                    withBorder[c.X, c.Y] = CellType.Path;
+                if (withBorder[c.X, c.Y].Type == CellType.Empty)
+                    withBorder[c.X, c.Y] = new Cell(c.X, c.Y, CellType.Path);
             }
 
             // Retourner la grille finale (avec bordure) et les mouvements validés
-            return new Grid(outW, outH, withBorder, startBorder, endBorder, finalMoves, _seed);
+            return new Grid(outW, outH, _seed, withBorder, startBorder, endBorder, finalMoves);
         }
 
         // En cas d'échec après plusieurs tentatives, ne pas retourner une grille vide non jouable.
@@ -357,7 +361,7 @@ public class GridGenerator : IGridGenerator
 
             if (CanPlaceIsolated(x, y, forbidden))
             {
-                _cells[x, y] = CellType.Obstacle;
+                _cells[x, y] = new Cell(x, y, CellType.Obstacle);
                 forbidden.Add(new Cell(x, y));
                 decoysPlaced++;
             }
@@ -387,7 +391,7 @@ public class GridGenerator : IGridGenerator
 
             if (CanPlaceIsolated(x, y, forbidden))
             {
-                _cells[x, y] = CellType.Obstacle;
+                _cells[x, y] = new Cell(x, y, CellType.Obstacle);
                 placed++;
             }
         }
@@ -401,11 +405,11 @@ public class GridGenerator : IGridGenerator
         if (!InGrid(x, y)) return false;
         if (x == 0 || y == 0 || x == _width - 1 || y == _height - 1) return false;
         if (forbidden is not null && forbidden.Contains(new Cell(x, y))) return false;
-        if (_cells[x, y] != CellType.Empty) return false;
-        return !(InGrid(x + 1, y) && _cells[x + 1, y] == CellType.Obstacle
-                 || InGrid(x - 1, y) && _cells[x - 1, y] == CellType.Obstacle
-                 || InGrid(x, y + 1) && _cells[x, y + 1] == CellType.Obstacle
-                 || InGrid(x, y - 1) && _cells[x, y - 1] == CellType.Obstacle);
+        if (_cells[x, y].Type != CellType.Empty) return false;
+        return !(InGrid(x + 1, y) && _cells[x + 1, y].Type == CellType.Obstacle
+                 || InGrid(x - 1, y) && _cells[x - 1, y].Type == CellType.Obstacle
+                 || InGrid(x, y + 1) && _cells[x, y + 1].Type == CellType.Obstacle
+                 || InGrid(x, y - 1) && _cells[x, y - 1].Type == CellType.Obstacle);
     }
 
     private int CountObstacles()
@@ -414,7 +418,7 @@ public class GridGenerator : IGridGenerator
         int c = 0;
         for (int y = 0; y < _height; y++)
             for (int x = 0; x < _width; x++)
-                if (_cells[x, y] == CellType.Obstacle) c++;
+                if (_cells[x, y].Type == CellType.Obstacle) c++;
         return c;
     }
 
@@ -469,7 +473,7 @@ public class GridGenerator : IGridGenerator
         bool IsBlockedFull(int x, int y)
         {
             if (!InGrid(x, y)) return true;
-            return _cells![x, y] == CellType.Obstacle;
+            return _cells![x, y].Type == CellType.Obstacle;
         }
 
         foreach (Direction m in moves)
@@ -525,7 +529,7 @@ public class GridGenerator : IGridGenerator
                 {
                     int nx = x + dx, ny = y + dy;
                     if (!InGrid(nx, ny)) break;
-                    if (_cells[nx, ny] == CellType.Obstacle) break;
+                    if (_cells[nx, ny].Type == CellType.Obstacle) break;
                     if (nx == b.X && ny == b.Y) break;
                     candidates.Add(new Cell(nx, ny));
                     x = nx; y = ny;
@@ -542,14 +546,14 @@ public class GridGenerator : IGridGenerator
             foreach (Cell c in candidates)
             {
                 if (forbidden.Contains(c)) continue;
-                if (_cells[c.X, c.Y] != CellType.Empty && _cells[c.X, c.Y] != CellType.Path) continue;
+                if (_cells[c.X, c.Y].Type != CellType.Empty && _cells[c.X, c.Y].Type != CellType.Path) continue;
 
-                CellType prev = _cells[c.X, c.Y];
+                CellType prev = _cells[c.X, c.Y].Type;
 
                 if (!CanPlaceIsolated(c.X, c.Y, forbidden))
                     continue;
 
-                _cells[c.X, c.Y] = CellType.Obstacle;
+                _cells[c.X, c.Y] = new Cell(c.X, c.Y, CellType.Obstacle);
 
                 if (SimulateMovesOnFullGrid(_moves, out _))
                 {
@@ -559,7 +563,7 @@ public class GridGenerator : IGridGenerator
                 }
                 else
                 {
-                    _cells[c.X, c.Y] = prev;
+                    _cells[c.X, c.Y] = new Cell(c.X, c.Y, prev);
                 }
             }
 
@@ -586,8 +590,8 @@ public class GridGenerator : IGridGenerator
             foreach ((int dx, int dy, char ch) in new (int, int, char)[] { (0,-1,'U'), (0,1,'D'), (-1,0,'L'), (1,0,'R') })
             {
                 int x = p.X, y = p.Y;
-                if (!InGrid(x + dx, y + dy) || _cells[x + dx, y + dy] == CellType.Obstacle) continue;
-                while (InGrid(x + dx, y + dy) && _cells[x + dx, y + dy] != CellType.Obstacle)
+                if (!InGrid(x + dx, y + dy) || _cells[x + dx, y + dy].Type == CellType.Obstacle) continue;
+                while (InGrid(x + dx, y + dy) && _cells[x + dx, y + dy].Type != CellType.Obstacle)
                 {
                     x += dx; y += dy;
                 }
