@@ -7,6 +7,8 @@ namespace SlideQuest.Services;
 public sealed class FakeGameHubClient : IGameHubClient
 {
     public event Action<Direction>? DirectionChanged;
+    public event Action? ResetRequested;
+    public event Action? GenerateRequested;
 
     public Task EnsureConnectionAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
 

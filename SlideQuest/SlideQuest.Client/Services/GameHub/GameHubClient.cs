@@ -9,6 +9,8 @@ public sealed class GameHubClient : IGameHubClient, IAsyncDisposable
     #region Statements
 
     public event Action<Direction>? DirectionChanged;
+    public event Action? ResetRequested;
+    public event Action? GenerateRequested;
     
     private readonly NavigationManager _navigationManager;
     
@@ -46,6 +48,16 @@ public sealed class GameHubClient : IGameHubClient, IAsyncDisposable
         _connection.On<Direction>("DirectionChanged", direction =>
         {
             DirectionChanged?.Invoke(direction);
+        });
+
+        _connection.On("Reset", () =>
+        {
+            ResetRequested?.Invoke();
+        });
+
+        _connection.On("Generate", () =>
+        {
+            GenerateRequested?.Invoke();
         });
 
         await _connection.StartAsync(cancellationToken);

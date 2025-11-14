@@ -120,6 +120,29 @@ public class PuzzlePresenter : ComponentBase, IDisposable
         }
     }
 
+    private void OnResetRequested()
+    {
+        if (_grid is null) return;
+        _player = _grid.Start;
+        _won = false;
+        _shouldFocusGrid = true;
+        Log("> hub: reset");
+        StateHasChanged();
+    }
+
+    private void OnGenerateRequested()
+    {
+        // Génère une nouvelle map avec le setting Normal par défaut
+        _difficulty = Difficulty.Normal;
+        int cap = CapFor(_difficulty);
+        _maxWidth = cap;
+        _maxHeight = cap;
+        _seedInput = null; // pas de seed => aléatoire
+        Log("> hub: generate (Normal)");
+        Generate();
+        _shouldFocusGrid = true;
+    }
+
     protected override void OnInitialized()
     {
         int cap = CapFor(_difficulty);
@@ -132,6 +155,8 @@ public class PuzzlePresenter : ComponentBase, IDisposable
 
         // Subscribe to game hub events
         _gameHubClient.DirectionChanged += OnDirectionChanged;
+        _gameHubClient.ResetRequested += OnResetRequested;
+        _gameHubClient.GenerateRequested += OnGenerateRequested;
     }
 
     protected override async Task OnInitializedAsync()
@@ -366,6 +391,32 @@ public class PuzzlePresenter : ComponentBase, IDisposable
                 Log($"!! error: {ex.Message}");
             }
         }
+        else if (string.Equals(text, "!reset", StringComparison.OrdinalIgnoreCase))
+        {
+            Log($">> {text}");
+            try
+            {
+                var resp = await Http.PostAsync("/reset", null);
+                Log($".. {(int)resp.StatusCode} {resp.ReasonPhrase}");
+            }
+            catch (Exception ex)
+            {
+                Log($"!! error: {ex.Message}");
+            }
+        }
+        else if (string.Equals(text, "!gen", StringComparison.OrdinalIgnoreCase))
+        {
+            Log($">> {text}");
+            try
+            {
+                var resp = await Http.PostAsync("/gen", null);
+                Log($".. {(int)resp.StatusCode} {resp.ReasonPhrase}");
+            }
+            catch (Exception ex)
+            {
+                Log($"!! error: {ex.Message}");
+            }
+        }
         else
         {
             Log($"?? unknown: {text}");
@@ -376,6 +427,8 @@ public class PuzzlePresenter : ComponentBase, IDisposable
     public void Dispose()
     {
         _gameHubClient.DirectionChanged -= OnDirectionChanged;
+        _gameHubClient.ResetRequested -= OnResetRequested;
+        _gameHubClient.GenerateRequested -= OnGenerateRequested;
         GC.SuppressFinalize(this);
     }
 }

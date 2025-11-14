@@ -5,6 +5,8 @@ namespace SlideQuest.Client.Services;
 public interface IGameHubClient
 {
     event Action<Direction>? DirectionChanged;
+    event Action? ResetRequested;
+    event Action? GenerateRequested;
     
     Task EnsureConnectionAsync(CancellationToken cancellationToken = default);
     
