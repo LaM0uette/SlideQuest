@@ -24,7 +24,7 @@
     <label style="margin-left:1rem;">Seed:</label>
     <input type="text" @bind="_seedInput" style="width:8rem;" placeholder="aléatoire" />
 
-    <button class="btn" style="margin-left:1rem;" @onclick="Generate">Générer</button>
+    <button class="btn" style="margin-left:1rem;" @onclick="@Generate">Générer</button>
 </div>
 
 @if (_grid is not null)
@@ -74,16 +74,16 @@
         <p class="win">🎉 Bravo ! Vous avez atteint l'arrivée.</p>
     }
 
-    <div class="moves" hidden="@(_grid.Moves.Count == 0)">
+    @*<div class="moves" hidden="@(_grid.MovesForWin.Count == 0)">
         <h4>Suite de mouvements (flèches) pour résoudre:</h4>
         <p>
-            @foreach (var m in _grid.Moves)
+            @foreach (var m in _grid.MovesForWin)
             {
                 @:(@(m switch { SlideQuest.Shared.Enums.Direction.Top => "⬆️", SlideQuest.Shared.Enums.Direction.Bottom => "⬇️", SlideQuest.Shared.Enums.Direction.Left => "⬅️", SlideQuest.Shared.Enums.Direction.Right => "➡️", _ => "" })) 
             }
         </p>
         <p><small>Seed utilisée: @_grid.Seed</small></p>
-    </div>
+    </div>*@
 
     <div class="terminal">
         <h4>Console de test (SignalR + endpoint)</h4>

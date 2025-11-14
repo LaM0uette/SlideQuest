@@ -41,6 +41,9 @@ builder.Services.AddSingleton<IGameHubClient, FakeGameHubClient>();
 
 builder.Services.AddSingleton<IGridGenerator, FakeGridGenerator>();
 
+// Batcher pour regrouper les directions et émettre toutes les 3s
+builder.Services.AddSingleton<DirectionBatcher>();
+
 
 // Swagger/OpenAPI to test the endpoint
 builder.Services.AddEndpointsApiExplorer();

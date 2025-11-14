@@ -208,7 +208,7 @@ public class PuzzlePresenter : ComponentBase, IDisposable
                     continue;
 
                 // Validation basique: au moins 1 mouvement et Start/End placés
-                bool hasMoves = generated.Moves is { Count: > 0 };
+                bool hasMoves = generated.MovesForWin is { Count: > 0 };
                 bool hasPathOrObstacle = false;
                 for (int y = 0; y < generated.Height && !hasPathOrObstacle; y++)
                 for (int x = 0; x < generated.Width && !hasPathOrObstacle; x++)

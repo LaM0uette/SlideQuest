@@ -4,36 +4,46 @@ namespace GridGenerator;
 
 public class GridGenerator : IGridGenerator
 {
-    // Internal state for generation
+    #region Statements
+
     private int _width;
     private int _height;
-    private Cell[,]? _cells;
-    private Cell _start;
-    private Cell _end;
-    private Random _rng = new();
-    private List<Direction> _moves = [];
     private int _seed;
+    private Random _random = new();
+    
+    private Cell[,]? _cells;
+    private Cell _start = new(0, 0);
+    private Cell _end = new(0, 0);
+    
+    private List<Direction> _moves = [];
+
+    #endregion
+    
+    #region Methods
 
     public Grid Generate(int width, int height, int? seed = null)
     {
-        // 1) Générer la carte comme avant (sans bordure), avec chemin garanti, obstacles et mouvements
         _width = width;
         _height = height;
 
-        // Initialize RNG deterministically from provided seed, or randomize a new one
         _seed = seed ?? Random.Shared.Next(int.MinValue, int.MaxValue);
-        _rng = new Random(_seed);
+        _random = new Random(_seed);
 
         for (int attempt = 0; attempt < 150; attempt++)
         {
             _cells = new Cell[_width, _height];
-            // initialiser chaque cellule avec ses coordonnées et Type par défaut Empty
+            
             for (int y = 0; y < _height; y++)
+            {
                 for (int x = 0; x < _width; x++)
+                {
                     _cells[x, y] = new Cell(x, y, CellType.Empty);
+                }
+            }
+            
             _moves = [];
 
-            PickStartEnd();
+            (_start, _end) = CalculateStartAndEnd();
 
             if (!TryBuildGuaranteedPath(out List<Cell> pathCells, out HashSet<Cell> blockers))
                 continue;
@@ -193,28 +203,29 @@ public class GridGenerator : IGridGenerator
         throw new InvalidOperationException("Grid generation failed after maximum attempts");
     }
 
-    #region Private helpers
-
-    private void PickStartEnd()
+    
+    private (Cell Start, Cell End) CalculateStartAndEnd()
     {
-        int startSide = _rng.Next(4); // 0=top,1=right,2=bottom,3=left
+        int startSide = _random.Next(4); // 0=top, 1=right, 2=bottom, 3=left
         int endSide = (startSide + 2) % 4; // opposite side
 
-        _start = RandomCellOnSide(startSide);
+        Cell start = RandomCellOnSide(startSide);
 
         for (int tries = 0; tries < 100; tries++)
         {
-            Cell e = RandomCellOnSide(endSide);
+            Cell cellOnSide = RandomCellOnSide(endSide);
             if (startSide % 2 == 0)
             {
-                if (e.X == _start.X) continue;
+                if (cellOnSide.X == _start.X) 
+                    continue;
             }
             else
             {
-                if (e.Y == _start.Y) continue;
+                if (cellOnSide.Y == _start.Y) 
+                    continue;
             }
-            _end = e;
-            return;
+            
+            return (start, cellOnSide);
         }
 
         Cell forced = RandomCellOnSide(endSide);
@@ -230,17 +241,18 @@ public class GridGenerator : IGridGenerator
             if (newY == _start.Y) newY = (newY + 1) % _height;
             forced = new Cell(forced.X, newY);
         }
-        _end = forced;
+        
+        return (start, forced);
     }
 
     private Cell RandomCellOnSide(int side)
     {
         return side switch
         {
-            0 => new Cell(_rng.Next(_width), 0),
-            1 => new Cell(_width - 1, _rng.Next(_height)),
-            2 => new Cell(_rng.Next(_width), _height - 1),
-            _ => new Cell(0, _rng.Next(_height))
+            0 => new Cell(_random.Next(_width), 0),
+            1 => new Cell(_width - 1, _random.Next(_height)),
+            2 => new Cell(_random.Next(_width), _height - 1),
+            _ => new Cell(0, _random.Next(_height))
         };
     }
 
@@ -251,7 +263,7 @@ public class GridGenerator : IGridGenerator
 
         int minMoves = Math.Min(_width, _height) <= 8 ? 6 : (Math.Min(_width, _height) <= 16 ? 7 : 8);
         int maxMoves = Math.Min(_width, _height) <= 8 ? 9 : (Math.Min(_width, _height) <= 16 ? 10 : 12);
-        int targetMoves = _rng.Next(minMoves, maxMoves + 1);
+        int targetMoves = _random.Next(minMoves, maxMoves + 1);
 
         List<Cell>? anchors = BuildZigZagAnchors(targetMoves);
         if (anchors is null || anchors.Count < 2) return false;
@@ -344,9 +356,9 @@ public class GridGenerator : IGridGenerator
         {
             if (CountObstacles() >= maxTotalObstacles) break;
 
-            bool placeOnRow = _rng.NextDouble() < 0.5;
-            int x = placeOnRow ? _rng.Next(1, _width - 1) : (_rng.NextDouble() < 0.5 ? 1 : _width - 2);
-            int y = placeOnRow ? (_rng.NextDouble() < 0.5 ? 1 : _height - 2) : _rng.Next(1, _height - 1);
+            bool placeOnRow = _random.NextDouble() < 0.5;
+            int x = placeOnRow ? _random.Next(1, _width - 1) : (_random.NextDouble() < 0.5 ? 1 : _width - 2);
+            int y = placeOnRow ? (_random.NextDouble() < 0.5 ? 1 : _height - 2) : _random.Next(1, _height - 1);
 
             if (forbidden.Contains(new Cell(x, y))) continue;
 
@@ -378,7 +390,7 @@ public class GridGenerator : IGridGenerator
         {
             if (CountObstacles() >= maxTotalObstacles) break;
 
-            int x = _rng.Next(_width); int y = _rng.Next(_height);
+            int x = _random.Next(_width); int y = _random.Next(_height);
             if (forbidden.Contains(new Cell(x, y))) continue;
 
             bool nearCritical2 = false;
@@ -387,7 +399,7 @@ public class GridGenerator : IGridGenerator
                 if (Math.Abs(p.X - x) + Math.Abs(p.Y - y) == 1)
                 { nearCritical2 = true; break; }
             }
-            if (nearCritical2 && _rng.NextDouble() < 0.7) continue;
+            if (nearCritical2 && _random.NextDouble() < 0.7) continue;
 
             if (CanPlaceIsolated(x, y, forbidden))
             {
@@ -538,7 +550,7 @@ public class GridGenerator : IGridGenerator
 
             for (int i = candidates.Count - 1; i > 0; i--)
             {
-                int j = _rng.Next(i + 1);
+                int j = _random.Next(i + 1);
                 (candidates[i], candidates[j]) = (candidates[j], candidates[i]);
             }
 
@@ -728,20 +740,20 @@ public class GridGenerator : IGridGenerator
         {
             if (horizontal)
             {
-                int col = _rng.Next(min, maxX + 1);
+                int col = _random.Next(min, maxX + 1);
                 int guard = 200;
                 while (guard-- > 0 && (col == current.X || col == _end.X))
-                    col = _rng.Next(min, maxX + 1);
+                    col = _random.Next(min, maxX + 1);
                 Cell next = new Cell(col, current.Y);
                 anchors.Add(next);
                 current = next;
             }
             else
             {
-                int row = _rng.Next(min, maxY + 1);
+                int row = _random.Next(min, maxY + 1);
                 int guard = 200;
                 while (guard-- > 0 && (row == current.Y || row == _end.Y))
-                    row = _rng.Next(min, maxY + 1);
+                    row = _random.Next(min, maxY + 1);
                 Cell next = new Cell(current.X, row);
                 anchors.Add(next);
                 current = next;

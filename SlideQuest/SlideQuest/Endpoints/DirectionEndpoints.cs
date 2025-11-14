@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using SlideQuest.Hubs;
+using SlideQuest.Services;
 using SlideQuest.Shared.Enums;
 
 namespace SlideQuest.Endpoints;
@@ -22,10 +21,10 @@ public static class DirectionEndpoints
 
     #region Methods
 
-    private static async Task<IResult> SwitchDirection([FromBody] Direction direction, IHubContext<GameHub> hub)
+    private static IResult SwitchDirection([FromBody] Direction direction, DirectionBatcher batcher)
     {
-        // Broadcast to all connected clients via SignalR
-        await hub.Clients.All.SendAsync("DirectionChanged", direction);
+        // On ne diffuse pas immédiatement, on ajoute un vote au batcher
+        batcher.AddVote(direction);
         return Results.Accepted(ApiRoute, new { direction });
     }
 

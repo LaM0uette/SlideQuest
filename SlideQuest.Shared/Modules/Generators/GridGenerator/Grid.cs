@@ -12,9 +12,9 @@ public class Grid
     public readonly Cell Start;
     public readonly Cell End;
     
-    public readonly List<Direction> Moves;
+    public readonly List<Direction> MovesForWin;
 
-    public Grid(int width, int height, int seed, Cell[,] cells, Cell start, Cell end, List<Direction> moves)
+    public Grid(int width, int height, int seed, Cell[,] cells, Cell start, Cell end, List<Direction> movesForWin)
     {
         Width = width;
         Height = height;
@@ -24,6 +24,6 @@ public class Grid
         Start = start;
         End = end;
         
-        Moves = moves;
+        MovesForWin = movesForWin;
     }
 }
