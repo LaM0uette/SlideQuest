@@ -74,7 +74,7 @@
         <p class="win">🎉 Bravo ! Vous avez atteint l'arrivée.</p>
     }
 
-    @*<div class="moves" hidden="@(_grid.MovesForWin.Count == 0)">
+    <div class="moves" hidden="@(_grid.MovesForWin.Count == 0)">
         <h4>Suite de mouvements (flèches) pour résoudre:</h4>
         <p>
             @foreach (var m in _grid.MovesForWin)
@@ -83,7 +83,7 @@
             }
         </p>
         <p><small>Seed utilisée: @_grid.Seed</small></p>
-    </div>*@
+    </div>
 
     <div class="terminal">
         <h4>Console de test (SignalR + endpoint)</h4>

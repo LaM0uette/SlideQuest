@@ -26,8 +26,8 @@
 .cell { border: 1px solid #1112; position: relative; }
 .cell.empty { background: #dff3ff; }
 .cell.obstacle { background: #444; }
-/*.cell.path { background: #7fd48a; }*/
-.cell.path { background: #dff3ff; }
+.cell.path { background: #7fd48a; }
+/*.cell.path { background: #dff3ff; }*/
 .cell.start { background: #ffcc00; }
 .cell.end { background: #ff6666; }
 .cell.player { background: var(--color-primary) }
