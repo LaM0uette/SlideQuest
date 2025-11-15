@@ -2,7 +2,6 @@
 using GridGenerator;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.JSInterop;
 using SlideQuest.Client.Services;
 using SlideQuest.Shared.Enums;
 using Components.GameLogger;
