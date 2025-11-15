@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using SlideQuest.Client.Services;
 using SlideQuest.Shared.Enums;
+using Components.GameLogger;
 
 namespace SlideQuest.Client.Pages;
 
@@ -18,6 +19,8 @@ public class PuzzlePresenter : ComponentBase, IDisposable
     
     protected Grid? Grid;
     protected Cell? PlayerCell;
+    
+    protected GameLoggerPresenter? Logger;
     
     [Inject] private IJSRuntime _jsRuntime { get; set; } = null!;
     [Inject] private IGameHubClient _gameHubClient { get; set; } = null!;
@@ -61,50 +64,14 @@ public class PuzzlePresenter : ComponentBase, IDisposable
                 // Ignore focus errors (e.g., element not rendered yet)
             }
         }
-
-        if (_scrollLogToEnd)
-        {
-            _scrollLogToEnd = false;
-
-            try
-            {
-                await _jsRuntime.InvokeVoidAsync("sqScrollToBottom", _logContainerRef);
-            }
-            catch
-            {
-                // Ignore JS errors
-            }
-        }
         
         await base.OnAfterRenderAsync(firstRender);
     }
-    
-    
-    
-    
-    
-    
-    
-
-    protected readonly List<string> _log = new();
-    private const int LogMax = 100;
-    protected ElementReference _logContainerRef;
-    private bool _scrollLogToEnd;
-
-    
-    
-
-    
-    
-    
-    
-    
-
 
     
 
-    // Seed input as raw text; if empty or invalid -> randomize
-    protected string? _seedInput;
+    
+    protected string? _seedInput; // TODO: remove this
 
     #endregion
 
@@ -126,6 +93,38 @@ public class PuzzlePresenter : ComponentBase, IDisposable
         StateHasChanged();
     }
     
+    protected void OnKeyDown(KeyboardEventArgs eventArgs)
+    {
+        if (Grid is null) 
+            return;
+        
+        string key = eventArgs.Key.ToLowerInvariant();
+        
+        switch (key)
+        {
+            case "arrowup": case "w": case "z": Slide(0, -1); break;
+            case "arrowdown": case "s": Slide(0, 1); break;
+            case "arrowleft": case "a": case "q": Slide(-1, 0); break;
+            case "arrowright": case "d": Slide(1, 0); break;
+        }
+    }
+
+    protected void SlideButton(string dir)
+    {
+        if (Grid is null) 
+            return;
+        
+        switch (dir)
+        {
+            case "U": Slide(0, -1); break;
+            case "D": Slide(0, 1); break;
+            case "L": Slide(-1, 0); break;
+            case "R": Slide(1, 0); break;
+        }
+        
+        _shouldFocusGrid = true;
+    }
+    
     
     private void OnGenerateRequested()
     {
@@ -136,7 +135,7 @@ public class PuzzlePresenter : ComponentBase, IDisposable
         
         _seedInput = null;
         
-        Log("> hub: generate (Normal)");
+        Logger?.Log("> hub: generate (Normal)");
         Generate();
         
         _shouldFocusGrid = true;
@@ -150,7 +149,7 @@ public class PuzzlePresenter : ComponentBase, IDisposable
         PlayerCell = Grid.Start;
         _shouldFocusGrid = true;
         
-        Log("> hub: reset");
+        Logger?.Log("> hub: reset");
         StateHasChanged();
     }
 
@@ -174,7 +173,7 @@ public class PuzzlePresenter : ComponentBase, IDisposable
                 throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
         }
 
-        Log($"> hub: {direction}");
+        Logger?.Log($"> hub: {direction}");
     }
     
     private void Slide(int directionX, int directionY)
@@ -200,7 +199,7 @@ public class PuzzlePresenter : ComponentBase, IDisposable
         
         if (PlayerCell == Grid?.End)
         {
-            Log(">>> Puzzle completed! <<<");
+            Logger?.Log(">>> Puzzle completed! <<<");
             Generate();
         }
         
@@ -305,71 +304,6 @@ public class PuzzlePresenter : ComponentBase, IDisposable
         return cell == CellType.Obstacle;
     }
     
-
-
-    private void Log(string message)
-    {
-        if (string.IsNullOrWhiteSpace(message)) return;
-        _log.Add(message);
-        if (_log.Count > LogMax)
-            _log.RemoveAt(0);
-        _scrollLogToEnd = true;
-        StateHasChanged();
-    }
-    
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    
-    
-    
-    protected void OnKeyDown(KeyboardEventArgs e)
-    {
-        if (Grid is null) 
-            return;
-        
-        string? key = e.Key?.ToLowerInvariant();
-        switch (key)
-        {
-            case "arrowup": case "w": case "z": Slide(0, -1); break;
-            case "arrowdown": case "s": Slide(0, 1); break;
-            case "arrowleft": case "a": case "q": Slide(-1, 0); break;
-            case "arrowright": case "d": Slide(1, 0); break;
-        }
-    }
-
-    protected void SlideButton(string dir)
-    {
-        if (Grid is null) 
-            return;
-        
-        switch (dir)
-        {
-            case "U": Slide(0, -1); break;
-            case "D": Slide(0, 1); break;
-            case "L": Slide(-1, 0); break;
-            case "R": Slide(1, 0); break;
-        }
-        
-        _shouldFocusGrid = true;
-    }
-
-    
-
     #endregion
 
     #region IDisposable

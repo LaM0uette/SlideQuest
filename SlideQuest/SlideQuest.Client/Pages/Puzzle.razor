@@ -1,6 +1,7 @@
 ﻿@page "/puzzle"
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
 @using GameConfig
+@using Components.GameLogger
 @inherits PuzzlePresenter
 
 <PageTitle>Puzzle Glace</PageTitle>
@@ -75,24 +76,9 @@
         <p><small>Seed utilisée: @Grid.Seed</small></p>
     </div>
 
-    <div class="terminal">
-        <h4>Console de test (SignalR + endpoint)</h4>
-        <div class="terminal-log" @ref="_logContainerRef" style="max-height: 160px; overflow:auto; background:#111; color:#0f0; padding:0.5rem; border-radius:4px; font-family:Consolas, monospace;">
-            @foreach (var line in _log)
-            {
-                <div>@line</div>
-            }
-        </div>
-    </div>
+    <GameLogger @ref="Logger" />
 }
 else
 {
     <p>Choisissez une taille et cliquez sur Générer.</p>
 }
-
-<script>
-    window.sqScrollToBottom = (el) => {
-        if (!el) return;
-        el.scrollTop = el.scrollHeight;
-    };
-</script>

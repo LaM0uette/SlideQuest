@@ -1,0 +1,14 @@
+﻿.game-logger-terminal {
+    height: 160px;
+    
+    background: #111;
+    color: #0f0;
+    
+    padding: 0.5rem;
+    border-radius: 4px;
+    
+    font-family: var(--font), sans-serif;
+    font-size: 0.875rem;
+    
+    overflow: auto;
+}

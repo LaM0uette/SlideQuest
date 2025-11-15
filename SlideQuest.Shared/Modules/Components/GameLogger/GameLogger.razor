@@ -1,0 +1,21 @@
+﻿@namespace Components.GameLogger
+@inherits GameLoggerPresenter
+
+
+<script>
+    window.sqScrollToBottom = (el) => {
+        if (!el) return;
+        el.scrollTop = el.scrollHeight;
+    };
+</script>
+
+
+<div @ref="GameLoggerTerminalRef"
+     class="game-logger-terminal">
+        
+    @foreach (string line in Logs)
+    {
+        <div>@line</div>
+    }
+
+</div>
