@@ -5,84 +5,90 @@ using SlideQuest.Shared.Enums;
 
 namespace SlideQuest.Services;
 
-/// <summary>
-/// Agrège les directions reçues et émet la direction majoritaire toutes les N secondes via SignalR.
-/// </summary>
 public sealed class DirectionBatcher : IDisposable
 {
+    #region Statements
+    
+    private const int FLUSH_INTERVAL_SECONDS = 2;
+
     private readonly IHubContext<GameHub> _hub;
-    private readonly System.Threading.Timer _timer;
+    
+    private readonly Timer _timer;
     private readonly ConcurrentDictionary<Direction, int> _counts = new();
     private readonly object _flushLock = new();
     private bool _disposed;
 
-    private static readonly TimeSpan Period = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan Period = TimeSpan.FromSeconds(FLUSH_INTERVAL_SECONDS);
 
     public DirectionBatcher(IHubContext<GameHub> hub)
     {
         _hub = hub;
 
-        // Initialize counts for all enum values to avoid missing keys
-        foreach (Direction dir in Enum.GetValues(typeof(Direction)))
+        foreach (Direction direction in Enum.GetValues<Direction>())
         {
-            _counts.TryAdd(dir, 0);
+            _counts.TryAdd(direction, 0);
         }
 
-        _timer = new System.Threading.Timer(async _ => await FlushAsync().ConfigureAwait(false), null, Period, Period);
+        _timer = new Timer(async void (_) => await FlushAsync().ConfigureAwait(false), null, Period, Period);
     }
+
+    #endregion
+
+    #region Methods
 
     public void AddVote(Direction direction)
     {
         _counts.AddOrUpdate(direction, 1, (_, current) => checked(current + 1));
     }
 
+    
     private async Task FlushAsync()
     {
-        if (_disposed) return;
-
-        // Ensure only one flush at a time
-        if (!System.Threading.Monitor.TryEnter(_flushLock))
+        if (_disposed) 
             return;
+
+        if (!Monitor.TryEnter(_flushLock))
+            return;
+        
         try
         {
-            // Snapshot counts
-            var snapshot = _counts.ToArray();
-
-            int total = 0;
-            foreach (var kv in snapshot)
-                total += kv.Value;
-
+            KeyValuePair<Direction, int>[] snapshot = _counts.ToArray();
+            
+            int total = snapshot.Sum(kv => kv.Value);
             if (total == 0)
-                return; // nothing to do
+                return;
 
-            // Majority by highest count, tie-breaker by enum order
             Direction selected = snapshot
                 .OrderByDescending(kv => kv.Value)
-                .ThenBy(kv => kv.Key) // enum order tie-break
+                .ThenBy(kv => kv.Key)
                 .First().Key;
 
-            // Reset counts to zero for next window
-            foreach (var key in _counts.Keys.ToArray())
+            foreach (Direction key in _counts.Keys.ToArray())
             {
-                _counts.AddOrUpdate(key, 0, (_, __) => 0);
+                _counts.AddOrUpdate(key, 0, (_, _) => 0);
             }
 
-            // Broadcast once
             await _hub.Clients.All.SendAsync("DirectionChanged", selected);
         }
         catch
         {
-            // Swallow to avoid timer termination; in real app log this
+            // Ignore exceptions during flush
         }
         finally
         {
-            System.Threading.Monitor.Exit(_flushLock);
+            Monitor.Exit(_flushLock);
         }
     }
+
+    #endregion
+
+    #region IDisposable
 
     public void Dispose()
     {
         _disposed = true;
         _timer.Dispose();
     }
+
+    #endregion
 }

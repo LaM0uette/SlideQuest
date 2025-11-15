@@ -6,15 +6,13 @@ using SlideQuest.Shared.Enums;
 
 namespace SlideQuest.Endpoints;
 
-public static class DirectionEndpoints
+public static class CommandEndpoints
 {
     #region Statements
-
-    private const string ApiRoute = "/direction";
-
+    
     public static IEndpointRouteBuilder MapDirectionEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapPost(ApiRoute, SwitchDirection);
+        endpoints.MapPost("/direction", SwitchDirection);
         endpoints.MapPost("/reset", ResetPlayer);
         endpoints.MapPost("/gen", GenerateMap);
 
@@ -27,9 +25,8 @@ public static class DirectionEndpoints
 
     private static IResult SwitchDirection([FromBody] Direction direction, DirectionBatcher batcher)
     {
-        // On ne diffuse pas immédiatement, on ajoute un vote au batcher
         batcher.AddVote(direction);
-        return Results.Accepted(ApiRoute, new { direction });
+        return Results.Accepted("/direction", new { direction });
     }
 
     private static async Task<IResult> ResetPlayer(IHubContext<GameHub> hub)
