@@ -196,30 +196,23 @@ public class PuzzlePresenter : ComponentBase, IDisposable
         int maxW = Math.Clamp(_maxWidth, minCap, cap);
         int maxH = Math.Clamp(_maxHeight, minCap, cap);
 
-        // Parse seed input (keeps the input field untouched)
+        // Parser la seed saisie (ne pas modifier le champ input)
         int? parsedSeed = null;
         if (!string.IsNullOrWhiteSpace(_seedInput) && int.TryParse(_seedInput, out int parsed))
             parsedSeed = parsed;
 
-        // Dimensions demandées pour la génération
+        // Choisir la seed d'abord, puis dériver la taille depuis CETTE seed
+        // Objectif: si l'utilisateur copie/colle la seed, la même grille (y compris dimensions) est régénérée.
+        int seedToUse = parsedSeed ?? Random.Shared.Next(int.MinValue, int.MaxValue);
+
+        // Dimensions toujours dérivées depuis seedToUse (et bornées par les réglages et la difficulté)
         int reqW;
         int reqH;
-        if (parsedSeed.HasValue)
         {
-            // Dimensions déterministes basées sur la seed fournie
-            Random dimRng = new(parsedSeed.Value);
+            Random dimRng = new(seedToUse);
             reqW = dimRng.Next(minCap, maxW + 1);
             reqH = dimRng.Next(minCap, maxH + 1);
         }
-        else
-        {
-            // Dimensions aléatoires dans la plage
-            reqW = _rng.Next(minCap, maxW + 1);
-            reqH = _rng.Next(minCap, maxH + 1);
-        }
-
-        // Determine seed: use provided if any; otherwise randomize one
-        int seedToUse = parsedSeed ?? Random.Shared.Next(int.MinValue, int.MaxValue);
 
         // Réessayer automatiquement si une génération échoue (pas de chemin/obstacles)
         const int maxAttempts = 5;
@@ -266,10 +259,11 @@ public class PuzzlePresenter : ComponentBase, IDisposable
                 }
                 else
                 {
-                    // Pas de seed saisie: on retente avec d'autres dimensions dans la même plage et une nouvelle seed aléatoire
-                    int altW = _rng.Next(minCap, maxW + 1);
-                    int altH = _rng.Next(minCap, maxH + 1);
+                    // Pas de seed saisie: nouvelle seed -> nouvelles dimensions dérivées de cette seed
                     int altSeed = Random.Shared.Next(int.MinValue, int.MaxValue);
+                    Random altDimRng = new(altSeed);
+                    int altW = altDimRng.Next(minCap, maxW + 1);
+                    int altH = altDimRng.Next(minCap, maxH + 1);
                     generated = _gridGenerator.Generate(altW, altH, altSeed);
                 }
             }
