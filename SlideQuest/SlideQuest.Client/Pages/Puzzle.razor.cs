@@ -22,7 +22,6 @@ public class PuzzlePresenter : ComponentBase, IDisposable
     
     protected GameLoggerPresenter? Logger;
     
-    [Inject] private IJSRuntime _jsRuntime { get; set; } = null!;
     [Inject] private IGameHubClient _gameHubClient { get; set; } = null!;
     [Inject] private IGridGenerator _gridGenerator { get; set; } = null!;
     [Inject] private IGameConfig _gameConfig { get; set; } = null!;
