@@ -22,7 +22,7 @@ public class PuzzlePresenter : ComponentBase, IDisposable
     
     protected GameLoggerPresenter? Logger;
     
-    [Inject] private IGameHubClient _gameHubClient { get; set; } = null!;
+    [Inject] private IGameHubService _gameHubService { get; set; } = null!;
     [Inject] private IGridGenerator _gridGenerator { get; set; } = null!;
     [Inject] private IGameConfig _gameConfig { get; set; } = null!;
     
@@ -38,14 +38,14 @@ public class PuzzlePresenter : ComponentBase, IDisposable
         
         _shouldFocusGrid = true;
 
-        _gameHubClient.GenerateRequested += OnGenerateRequested;
-        _gameHubClient.ResetRequested += OnResetRequested;
-        _gameHubClient.DirectionChanged += OnDirectionChanged;
+        _gameHubService.GenerateRequested += OnGenerateRequested;
+        _gameHubService.ResetRequested += OnResetRequested;
+        _gameHubService.DirectionChanged += OnDirectionChanged;
     }
 
     protected override async Task OnInitializedAsync()
     {
-        await _gameHubClient.EnsureConnectionAsync();
+        await _gameHubService.EnsureConnectionAsync();
     }
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -309,9 +309,9 @@ public class PuzzlePresenter : ComponentBase, IDisposable
 
     public void Dispose()
     {
-        _gameHubClient.DirectionChanged -= OnDirectionChanged;
-        _gameHubClient.ResetRequested -= OnResetRequested;
-        _gameHubClient.GenerateRequested -= OnGenerateRequested;
+        _gameHubService.DirectionChanged -= OnDirectionChanged;
+        _gameHubService.ResetRequested -= OnResetRequested;
+        _gameHubService.GenerateRequested -= OnGenerateRequested;
         
         GC.SuppressFinalize(this);
     }

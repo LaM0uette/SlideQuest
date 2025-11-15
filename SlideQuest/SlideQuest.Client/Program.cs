@@ -14,7 +14,7 @@ CultureInfo.DefaultThreadCurrentUICulture = fr;
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
 // SignalR hub client DI (concrete registered for interface)
-builder.Services.AddSingleton<IGameHubClient, GameHubClient>();
+builder.Services.AddSingleton<IGameHubService, GameHubService>();
 
 builder.Services.AddSingleton<IGridGenerator, GridGenerator.GridGenerator>();
 builder.Services.AddSingleton<IGameConfig, GameConfig.GameConfig>();

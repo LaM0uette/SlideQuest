@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using SlideQuest.Client.Services;
 using SlideQuest.Hubs;
 using SlideQuest.Services;
 using SlideQuest.Shared.Enums;
@@ -13,8 +14,8 @@ public static class CommandEndpoints
     public static IEndpointRouteBuilder MapDirectionEndpoints(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapPost("/direction", SwitchDirection);
-        endpoints.MapPost("/reset", ResetPlayer);
-        endpoints.MapPost("/gen", GenerateMap);
+        endpoints.MapPost("/reset", Reset);
+        endpoints.MapPost("/gen", Generate);
 
         return endpoints;
     }
@@ -29,15 +30,15 @@ public static class CommandEndpoints
         return Results.Accepted("/direction", new { direction });
     }
 
-    private static async Task<IResult> ResetPlayer(IHubContext<GameHub> hub)
+    private static async Task<IResult> Reset(IHubContext<GameHub, IGameHubClient> hub)
     {
-        await hub.Clients.All.SendAsync("Reset");
+        await hub.Clients.All.Reset();
         return Results.Accepted("/reset");
     }
 
-    private static async Task<IResult> GenerateMap(IHubContext<GameHub> hub)
+    private static async Task<IResult> Generate(IHubContext<GameHub, IGameHubClient> hub)
     {
-        await hub.Clients.All.SendAsync("Generate");
+        await hub.Clients.All.Generate();
         return Results.Accepted("/gen");
     }
 

@@ -10,16 +10,16 @@ public class HomePresenter : ComponentBase, IDisposable
 
     protected Direction? Direction;
     
-    [Inject] private IGameHubClient _gameHubClient { get; set; } = null!;
+    [Inject] private IGameHubService _gameHubService { get; set; } = null!;
 
     protected override void OnInitialized()
     {
-        _gameHubClient.DirectionChanged += OnDirectionChanged;
+        _gameHubService.DirectionChanged += OnDirectionChanged;
     }
 
     protected override async Task OnInitializedAsync()
     {
-        await _gameHubClient.EnsureConnectionAsync();
+        await _gameHubService.EnsureConnectionAsync();
     }
 
     #endregion
@@ -40,7 +40,7 @@ public class HomePresenter : ComponentBase, IDisposable
 
     public void Dispose()
     {
-        _gameHubClient.DirectionChanged -= OnDirectionChanged;
+        _gameHubService.DirectionChanged -= OnDirectionChanged;
         
         GC.SuppressFinalize(this);
     }

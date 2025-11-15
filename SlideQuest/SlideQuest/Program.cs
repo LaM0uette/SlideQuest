@@ -38,7 +38,7 @@ builder.Services.AddHttpClient();
 
 
 // Register a fake hub client on the server to satisfy DI during prerendering
-builder.Services.AddSingleton<IGameHubClient, FakeGameHubClient>();
+builder.Services.AddSingleton<IGameHubService, FakeGameHubService>();
 
 builder.Services.AddSingleton<IGridGenerator, FakeGridGenerator>();
 builder.Services.AddSingleton<IGameConfig, FakeGameConfig>();

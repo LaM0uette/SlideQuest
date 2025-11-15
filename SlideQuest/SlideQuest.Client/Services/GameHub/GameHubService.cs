@@ -4,7 +4,7 @@ using SlideQuest.Shared.Enums;
 
 namespace SlideQuest.Client.Services;
 
-public sealed class GameHubClient : IGameHubClient, IAsyncDisposable
+public sealed class GameHubService : IGameHubService, IGameHubClient, IAsyncDisposable
 {
     #region Statements
 
@@ -16,7 +16,7 @@ public sealed class GameHubClient : IGameHubClient, IAsyncDisposable
     
     private HubConnection? _connection;
     
-    public GameHubClient(NavigationManager navigationManager)
+    public GameHubService(NavigationManager navigationManager)
     {
         _navigationManager = navigationManager;
     }
@@ -38,32 +38,22 @@ public sealed class GameHubClient : IGameHubClient, IAsyncDisposable
         if (_connection is not null)
             return;
 
-        string hubUrl = new Uri(new Uri(_navigationManager.BaseUri), "hubs/game").ToString();
+        Uri baseUri = new(_navigationManager.BaseUri);
+        string hubUrl = new Uri(baseUri, "hubs/game").ToString();
 
         _connection = new HubConnectionBuilder()
             .WithUrl(hubUrl)
             .WithAutomaticReconnect()
             .Build();
 
-        _connection.On<Direction>("DirectionChanged", direction =>
-        {
-            DirectionChanged?.Invoke(direction);
-        });
-
-        _connection.On("Reset", () =>
-        {
-            ResetRequested?.Invoke();
-        });
-
-        _connection.On("Generate", () =>
-        {
-            GenerateRequested?.Invoke();
-        });
+        _connection.On<Direction>(nameof(IGameHubClient.SwitchDirection), SwitchDirection);
+        _connection.On(nameof(IGameHubClient.Reset), Reset);
+        _connection.On(nameof(IGameHubClient.Generate), Generate);
 
         await _connection.StartAsync(cancellationToken);
         Console.WriteLine("[SignalR] Connected to GameHub");
     }
-
+    
     public async Task StopAsync(CancellationToken cancellationToken = default)
     {
         if (_connection is not null)
@@ -73,6 +63,25 @@ public sealed class GameHubClient : IGameHubClient, IAsyncDisposable
             _connection = null;
             Console.WriteLine("[SignalR] Disconnected from GameHub");
         }
+    }
+
+    
+    public Task SwitchDirection(Direction direction)
+    {
+        DirectionChanged?.Invoke(direction);
+        return Task.CompletedTask;
+    }
+    
+    public Task Reset()
+    {
+        ResetRequested?.Invoke();
+        return Task.CompletedTask;
+    }
+
+    public Task Generate()
+    {
+        GenerateRequested?.Invoke();
+        return Task.CompletedTask;
     }
 
     #endregion

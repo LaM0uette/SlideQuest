@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
+using SlideQuest.Client.Services;
 using SlideQuest.Hubs;
 using SlideQuest.Shared.Enums;
 
@@ -11,7 +12,7 @@ public sealed class DirectionBatcher : IDisposable
     
     private const int FLUSH_INTERVAL_SECONDS = 2;
 
-    private readonly IHubContext<GameHub> _hub;
+    private readonly IHubContext<GameHub, IGameHubClient> _hub;
     
     private readonly Timer _timer;
     private readonly ConcurrentDictionary<Direction, int> _counts = new();
@@ -20,7 +21,7 @@ public sealed class DirectionBatcher : IDisposable
 
     private static readonly TimeSpan Period = TimeSpan.FromSeconds(FLUSH_INTERVAL_SECONDS);
 
-    public DirectionBatcher(IHubContext<GameHub> hub)
+    public DirectionBatcher(IHubContext<GameHub, IGameHubClient> hub)
     {
         _hub = hub;
 
@@ -68,7 +69,7 @@ public sealed class DirectionBatcher : IDisposable
                 _counts.AddOrUpdate(key, 0, (_, _) => 0);
             }
 
-            await _hub.Clients.All.SendAsync("DirectionChanged", selected);
+            await _hub.Clients.All.SwitchDirection(selected);
         }
         catch
         {
