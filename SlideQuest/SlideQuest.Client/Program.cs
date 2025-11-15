@@ -1,4 +1,5 @@
 using System.Globalization;
+using GameConfig;
 using GridGenerator;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using SlideQuest.Client.Services;
@@ -16,5 +17,6 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddSingleton<IGameHubClient, GameHubClient>();
 
 builder.Services.AddSingleton<IGridGenerator, GridGenerator.GridGenerator>();
+builder.Services.AddSingleton<IGameConfig, GameConfig.GameConfig>();
 
 await builder.Build().RunAsync();

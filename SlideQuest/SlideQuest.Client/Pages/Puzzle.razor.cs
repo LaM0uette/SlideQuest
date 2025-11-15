@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
+﻿using GameConfig;
 using GridGenerator;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -13,30 +10,51 @@ namespace SlideQuest.Client.Pages;
 
 public class PuzzlePresenter : ComponentBase, IDisposable
 {
-    protected ElementReference _gridRef;
-    private bool _shouldFocusGrid;
+    #region Statements
+    
+    protected Difficulty CurrentDifficulty = Difficulty.Easy;
 
-    // Log & command input
-    protected string _commandText = string.Empty;
-    protected readonly List<string> _log = new();
-    private const int LogMax = 100;
-    protected ElementReference _logContainerRef;
-    private bool _scrollLogToEnd;
+    protected ElementReference GridRef;
+    
+    protected Grid? Grid;
+    protected Cell? PlayerCell;
+    
+    [Inject] private IJSRuntime _jsRuntime { get; set; } = null!;
+    [Inject] private IGameHubClient _gameHubClient { get; set; } = null!;
+    [Inject] private IGridGenerator _gridGenerator { get; set; } = null!;
+    [Inject] private IGameConfig _gameConfig { get; set; } = null!;
+    
+    private int _minGridLimit;
+    private int _maxGridLimit;
+    
+    private bool _shouldFocusGrid; // TODO: listen key on top to remove focus issues
+    
+    protected override void OnInitialized()
+    {
+        _minGridLimit = _gameConfig.GetMinLimit(CurrentDifficulty);
+        _maxGridLimit = _gameConfig.GetMaxLimit(CurrentDifficulty);
+        
+        _shouldFocusGrid = true;
 
-    [Inject] protected IGridGenerator _gridGenerator { get; set; } = null!;
-    [Inject] protected IGameHubClient _gameHubClient { get; set; } = null!;
-    [Inject] protected HttpClient Http { get; set; } = null!;
-    [Inject] protected IJSRuntime JS { get; set; } = null!;
-    [Inject] protected NavigationManager _nav { get; set; } = null!;
+        _gameHubClient.GenerateRequested += OnGenerateRequested;
+        _gameHubClient.ResetRequested += OnResetRequested;
+        _gameHubClient.DirectionChanged += OnDirectionChanged;
+    }
 
+    protected override async Task OnInitializedAsync()
+    {
+        await _gameHubClient.EnsureConnectionAsync();
+    }
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (_shouldFocusGrid)
         {
             _shouldFocusGrid = false;
+            
             try
             {
-                await _gridRef.FocusAsync();
+                await GridRef.FocusAsync();
             }
             catch
             {
@@ -47,56 +65,247 @@ public class PuzzlePresenter : ComponentBase, IDisposable
         if (_scrollLogToEnd)
         {
             _scrollLogToEnd = false;
+
             try
             {
-                await JS.InvokeVoidAsync("sqScrollToBottom", _logContainerRef);
+                await _jsRuntime.InvokeVoidAsync("sqScrollToBottom", _logContainerRef);
             }
-            catch { }
+            catch
+            {
+                // Ignore JS errors
+            }
         }
+        
         await base.OnAfterRenderAsync(firstRender);
     }
+    
+    
+    
+    
+    
+    
+    
 
-    protected enum Difficulty { Easy, Normal, Hard, Expert }
+    protected readonly List<string> _log = new();
+    private const int LogMax = 100;
+    protected ElementReference _logContainerRef;
+    private bool _scrollLogToEnd;
 
-    protected Difficulty _difficulty = Difficulty.Easy;
+    
+    
 
-    // Per-difficulty caps for max dimension
-    private readonly Dictionary<Difficulty, int> _caps = new()
-    {
-        { Difficulty.Easy, 8 },
-        { Difficulty.Normal, 16 },
-        { Difficulty.Hard, 24 },
-        { Difficulty.Expert, 32 }
-    };
+    
+    
+    
+    
+    
 
-    // User-configurable maximums for width/height
-    protected int _maxWidth;
-    protected int _maxHeight;
 
-    // Actual generated grid size
-    protected int _width;
-    protected int _height;
-
-    protected Grid? _grid;
-    protected Cell _player;
-    protected bool _won;
+    
 
     // Seed input as raw text; if empty or invalid -> randomize
     protected string? _seedInput;
 
-    private readonly Random _rng = new();
-    private const int MinSize = 5; // absolute minimum practical size for a playable grid (Easy level lower bound)
+    #endregion
 
-    // Per-difficulty minimum caps for min dimension
-    private readonly Dictionary<Difficulty, int> _mins = new()
+    #region Methods
+    
+    protected void OnDifficultyChanged(ChangeEventArgs eventArgs)
     {
-        { Difficulty.Easy, 5 },
-        { Difficulty.Normal, 10 },
-        { Difficulty.Hard, 16 },
-        { Difficulty.Expert, 24 }
-    };
+        if (eventArgs.Value is null) 
+            return;
 
-    protected int Min => MinFor(_difficulty);
+        if (!Enum.TryParse(typeof(Difficulty), eventArgs.Value.ToString(), out object? value) || value is not Difficulty difficulty) 
+            return;
+        
+        CurrentDifficulty = difficulty;
+        
+        _minGridLimit = _gameConfig.GetMinLimit(CurrentDifficulty);
+        _maxGridLimit = _gameConfig.GetMaxLimit(CurrentDifficulty);
+        
+        StateHasChanged();
+    }
+    
+    
+    private void OnGenerateRequested()
+    {
+        CurrentDifficulty = Difficulty.Normal;
+        
+        _minGridLimit = _gameConfig.GetMinLimit(CurrentDifficulty);
+        _maxGridLimit = _gameConfig.GetMaxLimit(CurrentDifficulty);
+        
+        _seedInput = null;
+        
+        Log("> hub: generate (Normal)");
+        Generate();
+        
+        _shouldFocusGrid = true;
+    }
+    
+    private void OnResetRequested()
+    {
+        if (Grid is null) 
+            return;
+        
+        PlayerCell = Grid.Start;
+        _shouldFocusGrid = true;
+        
+        Log("> hub: reset");
+        StateHasChanged();
+    }
+
+    private void OnDirectionChanged(Direction direction)
+    {
+        switch (direction)
+        {
+            case Direction.Top: Slide(0, -1);
+                break;
+            
+            case Direction.Bottom: Slide(0, 1);
+                break;
+            
+            case Direction.Left: Slide(-1, 0);
+                break;
+            
+            case Direction.Right: Slide(1, 0);
+                break;
+            
+            default:
+                throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+        }
+
+        Log($"> hub: {direction}");
+    }
+    
+    private void Slide(int directionX, int directionY)
+    {
+        if (directionX == 0 && directionY == 0) 
+            return;
+        
+        (int playerX, int playerY, _) = PlayerCell ?? throw new InvalidOperationException("PlayerCell is null");
+
+        while (true)
+        {
+            int nextPlayerX = playerX + directionX;
+            int nextPlayerY = playerY + directionY;
+            
+            if (!InGrid(nextPlayerX, nextPlayerY) || IsBlocked(nextPlayerX, nextPlayerY))
+                break;
+            
+            playerX = nextPlayerX; 
+            playerY = nextPlayerY;
+        }
+
+        PlayerCell = new Cell(playerX, playerY);
+        
+        if (PlayerCell == Grid?.End)
+        {
+            Log(">>> Puzzle completed! <<<");
+            Generate();
+        }
+        
+        StateHasChanged();
+    }
+    
+    //TODO: make this private after add !gen command with difficulty/seed params
+    protected void Generate()
+    {
+        int? parsedSeed = null;
+        if (!string.IsNullOrWhiteSpace(_seedInput) && int.TryParse(_seedInput, out int parsed))
+            parsedSeed = parsed;
+
+        int seedToUse = parsedSeed ?? Random.Shared.Next(int.MinValue, int.MaxValue);
+
+        Random random = new(seedToUse);
+        int width = random.Next(_minGridLimit, _maxGridLimit + 1);
+        int height = random.Next(_minGridLimit, _maxGridLimit + 1);
+
+        const int maxAttempts = 5;
+        Grid? generated = null;
+        
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            try
+            {
+                generated = _gridGenerator.Generate(width, height, seedToUse);
+
+                bool hasMoves = generated.MovesForWin.Count > 0;
+                bool hasPathOrObstacle = false;
+                
+                for (int y = 0; y < generated.Height && !hasPathOrObstacle; y++)
+                {
+                    for (int x = 0; x < generated.Width && !hasPathOrObstacle; x++)
+                    {
+                        CellType cellType = generated.Cells[x, y].Type;
+                        
+                        if (cellType is CellType.Path or CellType.Obstacle)
+                        {
+                            hasPathOrObstacle = true;
+                        }
+                    }
+                }
+
+                if (hasMoves && hasPathOrObstacle)
+                    break;
+
+                generated = null;
+            }
+            catch (Exception)
+            {
+                generated = null;
+            }
+        }
+
+        if (generated is null)
+        {
+            try
+            {
+                if (parsedSeed.HasValue)
+                {
+                    generated = _gridGenerator.Generate(width, height, seedToUse);
+                }
+                else
+                {
+                    int altSeed = Random.Shared.Next(int.MinValue, int.MaxValue);
+                    Random altRandom = new(altSeed);
+                    
+                    int altW = altRandom.Next(_minGridLimit, _maxGridLimit + 1);
+                    int altH = altRandom.Next(_minGridLimit, _maxGridLimit + 1);
+                    generated = _gridGenerator.Generate(altW, altH, altSeed);
+                }
+            }
+            catch
+            {
+                // Ignore exceptions on last attempt
+            }
+        }
+
+        if (generated is null)
+            return;
+
+        Grid = generated;
+        
+        PlayerCell = Grid.Start;
+        _shouldFocusGrid = true;
+        
+        StateHasChanged();
+    }
+    
+    private bool InGrid(int x, int y)
+    {
+        return x >= 0 && y >= 0 && x < Grid?.Width && y < Grid?.Height;
+    }
+
+    private bool IsBlocked(int x, int y)
+    {
+        if (Grid is null) 
+            return true;
+        
+        CellType cell = Grid.Cells[x, y].Type;
+        return cell == CellType.Obstacle;
+    }
+    
+
 
     private void Log(string message)
     {
@@ -107,193 +316,30 @@ public class PuzzlePresenter : ComponentBase, IDisposable
         _scrollLogToEnd = true;
         StateHasChanged();
     }
+    
+    
 
-    private void OnDirectionChanged(Direction direction)
-    {
-        // Map to Slide
-        switch (direction)
-        {
-            case Direction.Top: Slide(0, -1); Log($"> hub: {direction}"); break;
-            case Direction.Bottom: Slide(0, 1); Log($"> hub: {direction}"); break;
-            case Direction.Left: Slide(-1, 0); Log($"> hub: {direction}"); break;
-            case Direction.Right: Slide(1, 0); Log($"> hub: {direction}"); break;
-        }
-    }
+    
 
-    private void OnResetRequested()
-    {
-        if (_grid is null) return;
-        _player = _grid.Start;
-        _won = false;
-        _shouldFocusGrid = true;
-        Log("> hub: reset");
-        StateHasChanged();
-    }
+    
 
-    private void OnGenerateRequested()
-    {
-        // Génère une nouvelle map avec le setting Normal par défaut
-        _difficulty = Difficulty.Normal;
-        int cap = CapFor(_difficulty);
-        _maxWidth = cap;
-        _maxHeight = cap;
-        _seedInput = null; // pas de seed => aléatoire
-        Log("> hub: generate (Normal)");
-        Generate();
-        _shouldFocusGrid = true;
-    }
+    
 
-    protected override void OnInitialized()
-    {
-        int cap = CapFor(_difficulty);
-        int minCap = MinFor(_difficulty);
-        _maxWidth = cap;
-        _maxHeight = cap;
-        _width = minCap;
-        _height = minCap;
-        _shouldFocusGrid = true;
+    
 
-        // Subscribe to game hub events
-        _gameHubClient.DirectionChanged += OnDirectionChanged;
-        _gameHubClient.ResetRequested += OnResetRequested;
-        _gameHubClient.GenerateRequested += OnGenerateRequested;
-    }
+    
 
-    protected override async Task OnInitializedAsync()
-    {
-        await _gameHubClient.EnsureConnectionAsync();
-    }
+    
 
-    protected void OnDifficultyChanged(ChangeEventArgs e)
-    {
-        if (e.Value is null) return;
-        if (Enum.TryParse(typeof(Difficulty), e.Value.ToString(), out object? value) && value is Difficulty d)
-        {
-            _difficulty = d;
-            int cap = CapFor(_difficulty);
-            // Reset inputs to the default values for the selected difficulty
-            _maxWidth = cap;
-            _maxHeight = cap;
-            StateHasChanged();
-        }
-    }
+    
 
-    protected async Task OnCommandKeyDown(KeyboardEventArgs e)
-    {
-        if (e.Key?.Equals("Enter", StringComparison.OrdinalIgnoreCase) == true)
-        {
-            await SubmitCommandAsync();
-        }
-    }
-
-    protected int CapFor(Difficulty d) => _caps[d];
-    protected int MinFor(Difficulty d) => _mins[d];
-
-    protected void Generate()
-    {
-        int cap = CapFor(_difficulty);
-        int minCap = MinFor(_difficulty);
-        int maxW = Math.Clamp(_maxWidth, minCap, cap);
-        int maxH = Math.Clamp(_maxHeight, minCap, cap);
-
-        // Parser la seed saisie (ne pas modifier le champ input)
-        int? parsedSeed = null;
-        if (!string.IsNullOrWhiteSpace(_seedInput) && int.TryParse(_seedInput, out int parsed))
-            parsedSeed = parsed;
-
-        // Choisir la seed d'abord, puis dériver la taille depuis CETTE seed
-        // Objectif: si l'utilisateur copie/colle la seed, la même grille (y compris dimensions) est régénérée.
-        int seedToUse = parsedSeed ?? Random.Shared.Next(int.MinValue, int.MaxValue);
-
-        // Dimensions toujours dérivées depuis seedToUse (et bornées par les réglages et la difficulté)
-        int reqW;
-        int reqH;
-        {
-            Random dimRng = new(seedToUse);
-            reqW = dimRng.Next(minCap, maxW + 1);
-            reqH = dimRng.Next(minCap, maxH + 1);
-        }
-
-        // Réessayer automatiquement si une génération échoue (pas de chemin/obstacles)
-        const int maxAttempts = 5;
-        Grid? generated = null;
-        for (int attempt = 0; attempt < maxAttempts; attempt++)
-        {
-            try
-            {
-                generated = _gridGenerator.Generate(reqW, reqH, seedToUse);
-                if (generated is null)
-                    continue;
-
-                // Validation basique: au moins 1 mouvement et Start/End placés
-                bool hasMoves = generated.MovesForWin is { Count: > 0 };
-                bool hasPathOrObstacle = false;
-                for (int y = 0; y < generated.Height && !hasPathOrObstacle; y++)
-                for (int x = 0; x < generated.Width && !hasPathOrObstacle; x++)
-                {
-                    var c = generated.Cells[x, y].Type;
-                    if (c == CellType.Path || c == CellType.Obstacle) hasPathOrObstacle = true;
-                }
-
-                if (hasMoves && hasPathOrObstacle)
-                    break; // OK
-
-                generated = null; // force retry
-            }
-            catch (Exception)
-            {
-                // Échec de génération: on retente
-                generated = null;
-            }
-        }
-
-        if (generated is null)
-        {
-            // Dernier recours: relancer une demande
-            try
-            {
-                if (parsedSeed.HasValue)
-                {
-                    // Garder la même seed et les mêmes dimensions déterministes pour garantir la reproductibilité
-                    generated = _gridGenerator.Generate(reqW, reqH, seedToUse);
-                }
-                else
-                {
-                    // Pas de seed saisie: nouvelle seed -> nouvelles dimensions dérivées de cette seed
-                    int altSeed = Random.Shared.Next(int.MinValue, int.MaxValue);
-                    Random altDimRng = new(altSeed);
-                    int altW = altDimRng.Next(minCap, maxW + 1);
-                    int altH = altDimRng.Next(minCap, maxH + 1);
-                    generated = _gridGenerator.Generate(altW, altH, altSeed);
-                }
-            }
-            catch
-            {
-                // reste null, on laisse l'UI inchangée
-            }
-        }
-
-        if (generated is null)
-            return; // pas de grille exploitable, rien ne change
-
-        _grid = generated;
-        // Ne pas remplir/altérer le champ input seed; afficher la seed utilisée séparément via _grid.Seed
-        _width = _grid.Width;
-        _height = _grid.Height;
-        _player = _grid.Start;
-        _won = false;
-        _shouldFocusGrid = true;
-        StateHasChanged();
-    }
-
-    // All generation logic has been extracted to GridGenerator. Only keep player interactions below.
-
-    private bool InGrid(int x, int y) => x >= 0 && y >= 0 && x < _width && y < _height;
-
-    // --- Interactive sliding logic ---
+    
+    
+    
+    
     protected void OnKeyDown(KeyboardEventArgs e)
     {
-        if (_grid is null || _won) 
+        if (Grid is null) 
             return;
         
         string? key = e.Key?.ToLowerInvariant();
@@ -308,7 +354,9 @@ public class PuzzlePresenter : ComponentBase, IDisposable
 
     protected void SlideButton(string dir)
     {
-        if (_grid is null || _won) return;
+        if (Grid is null) 
+            return;
+        
         switch (dir)
         {
             case "U": Slide(0, -1); break;
@@ -316,113 +364,24 @@ public class PuzzlePresenter : ComponentBase, IDisposable
             case "L": Slide(-1, 0); break;
             case "R": Slide(1, 0); break;
         }
+        
         _shouldFocusGrid = true;
     }
 
-    protected void Slide(int dx, int dy)
-    {
-        if (dx == 0 && dy == 0) 
-            return;
-        
-        var (x, y, _) = _player;
+    
 
-        // slide until next cell would be blocked or out of grid
-        while (true)
-        {
-            int nx = x + dx;
-            int ny = y + dy;
-            if (!InGrid(nx, ny) || IsBlocked(nx, ny))
-                break;
-            x = nx; y = ny;
-        }
+    #endregion
 
-        _player = new Cell(x, y);
-        if (_player == _grid?.End) _won = true;
-        StateHasChanged();
-    }
+    #region IDisposable
 
-    protected bool IsBlocked(int x, int y)
-    {
-        if (_grid is null) 
-            return true;
-        
-        CellType cell = _grid.Cells[x, y].Type;
-        return cell == CellType.Obstacle;
-    }
-
-    // --- Command handling ---
-    private static bool TryParseDirectionCommand(string input, out Direction direction)
-    {
-        direction = Direction.Top;
-        if (string.IsNullOrWhiteSpace(input)) return false;
-        string cmd = input.Trim().ToLowerInvariant();
-        return cmd switch
-        {
-            "!up" => (direction = Direction.Top) == Direction.Top,
-            "!down" => (direction = Direction.Bottom) == Direction.Bottom,
-            "!left" => (direction = Direction.Left) == Direction.Left,
-            "!right" => (direction = Direction.Right) == Direction.Right,
-            _ => false
-        };
-    }
-
-    protected async Task SubmitCommandAsync()
-    {
-        string text = _commandText.Trim();
-        if (string.IsNullOrEmpty(text)) return;
-        _commandText = string.Empty;
-
-        if (TryParseDirectionCommand(text, out var dir))
-        {
-            Log($">> {text}");
-            try
-            {
-                var resp = await Http.PostAsJsonAsync("/direction", dir);
-                Log($".. {(int)resp.StatusCode} {resp.ReasonPhrase}");
-            }
-            catch (Exception ex)
-            {
-                Log($"!! error: {ex.Message}");
-            }
-        }
-        else if (string.Equals(text, "!reset", StringComparison.OrdinalIgnoreCase))
-        {
-            Log($">> {text}");
-            try
-            {
-                var resp = await Http.PostAsync("/reset", null);
-                Log($".. {(int)resp.StatusCode} {resp.ReasonPhrase}");
-            }
-            catch (Exception ex)
-            {
-                Log($"!! error: {ex.Message}");
-            }
-        }
-        else if (string.Equals(text, "!gen", StringComparison.OrdinalIgnoreCase))
-        {
-            Log($">> {text}");
-            try
-            {
-                var resp = await Http.PostAsync("/gen", null);
-                Log($".. {(int)resp.StatusCode} {resp.ReasonPhrase}");
-            }
-            catch (Exception ex)
-            {
-                Log($"!! error: {ex.Message}");
-            }
-        }
-        else
-        {
-            Log($"?? unknown: {text}");
-        }
-    }
-
-    // IDisposable
     public void Dispose()
     {
         _gameHubClient.DirectionChanged -= OnDirectionChanged;
         _gameHubClient.ResetRequested -= OnResetRequested;
         _gameHubClient.GenerateRequested -= OnGenerateRequested;
+        
         GC.SuppressFinalize(this);
     }
+
+    #endregion
 }

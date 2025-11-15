@@ -1,5 +1,6 @@
 ﻿@page "/puzzle"
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
+@using GameConfig
 @inherits PuzzlePresenter
 
 <PageTitle>Puzzle Glace</PageTitle>
@@ -8,18 +9,12 @@
 
 <div class="controls">
     <label>Difficulté:</label>
-    <select value="@_difficulty" @onchange="OnDifficultyChanged">
-        <option value="Easy">Facile</option>
-        <option value="Normal">Normal</option>
-        <option value="Hard">Difficile</option>
-        <option value="Expert">Expert</option>
+    <select value="@CurrentDifficulty" @onchange="OnDifficultyChanged">
+        <option value="@Difficulty.Easy">Facile</option>
+        <option value="@Difficulty.Normal">Normal</option>
+        <option value="@Difficulty.Hard">Difficile</option>
+        <option value="@Difficulty.Expert">Expert</option>
     </select>
-
-    <label style="margin-left:1rem;">Max largeur:</label>
-    <input type="number" min="@Min" max="@CapFor(_difficulty)" @bind="_maxWidth" style="width:5rem;" />
-
-    <label style="margin-left:1rem;">Max hauteur:</label>
-    <input type="number" min="@Min" max="@CapFor(_difficulty)" @bind="_maxHeight" style="width:5rem;" />
 
     <label style="margin-left:1rem;">Seed:</label>
     <input type="text" @bind="_seedInput" style="width:8rem;" placeholder="aléatoire" />
@@ -27,7 +22,7 @@
     <button class="btn" style="margin-left:1rem;" @onclick="@Generate">Générer</button>
 </div>
 
-@if (_grid is not null)
+@if (Grid is not null)
 {
     <div class="legend">
         <span class="cell start"></span> Départ
@@ -48,13 +43,13 @@
         <small>Clavier: flèches / WASD / ZQSD</small>
     </div>
 
-    <div class="grid-container" style="--size: 480px; --n: @_width; --m: @_height;">
-        <div class="grid focusable" tabindex="0" @ref="_gridRef" @onkeydown="OnKeyDown" @onkeydown:preventDefault @onkeydown:stopPropagation>
-            @for (int y = 0; y < _height; y++)
+    <div class="grid-container" style="--size: 480px; --n: @Grid?.Width; --m: @Grid?.Height;">
+        <div class="grid focusable" tabindex="0" @ref="GridRef" @onkeydown="OnKeyDown" @onkeydown:preventDefault @onkeydown:stopPropagation>
+            @for (int y = 0; y < Grid?.Height; y++)
             {
-                @for (int x = 0; x < _width; x++)
+                @for (int x = 0; x < Grid?.Width; x++)
                 {
-                    string cls = _grid.Cells[x, y].Type switch
+                    string cls = Grid.Cells[x, y].Type switch
                     {
                         CellType.Start => "start",
                         CellType.End => "end",
@@ -62,27 +57,22 @@
                         CellType.Obstacle => "obstacle",
                         _ => "empty"
                     };
-                    bool isPlayer = (_player.X == x && _player.Y == y);
+                    bool isPlayer = (PlayerCell.X == x && PlayerCell.Y == y);
                     <div class="cell @cls @(isPlayer ? "player" : string.Empty)" title="(@x,@y)"></div>
                 }
             }
         </div>
     </div>
 
-    @if (_won)
-    {
-        <p class="win">🎉 Bravo ! Vous avez atteint l'arrivée.</p>
-    }
-
-    <div class="moves" hidden="@(_grid.MovesForWin.Count == 0)">
+    <div class="moves" hidden="@(Grid.MovesForWin.Count == 0)">
         <h4>Suite de mouvements (flèches) pour résoudre:</h4>
         <p>
-            @foreach (var m in _grid.MovesForWin)
+            @foreach (var m in Grid.MovesForWin)
             {
                 @:(@(m switch { SlideQuest.Shared.Enums.Direction.Top => "⬆️", SlideQuest.Shared.Enums.Direction.Bottom => "⬇️", SlideQuest.Shared.Enums.Direction.Left => "⬅️", SlideQuest.Shared.Enums.Direction.Right => "➡️", _ => "" })) 
             }
         </p>
-        <p><small>Seed utilisée: @_grid.Seed</small></p>
+        <p><small>Seed utilisée: @Grid.Seed</small></p>
     </div>
 
     <div class="terminal">
@@ -93,11 +83,6 @@
                 <div>@line</div>
             }
         </div>
-        <div class="terminal-input" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
-            <input placeholder="Entrez !up, !down, !left, !right" @bind-value="_commandText" @bind-value:event="oninput" @onkeydown="OnCommandKeyDown" style="flex:1;" />
-            <button class="btn" @onclick="SubmitCommandAsync">Envoyer</button>
-        </div>
-        <small>Astuce: ces commandes appellent POST /direction et déclenchent l'événement SignalR DirectionChanged.</small>
     </div>
 }
 else

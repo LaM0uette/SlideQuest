@@ -1,4 +1,5 @@
 using System.Globalization;
+using GameConfig;
 using GridGenerator;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
@@ -40,6 +41,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IGameHubClient, FakeGameHubClient>();
 
 builder.Services.AddSingleton<IGridGenerator, FakeGridGenerator>();
+builder.Services.AddSingleton<IGameConfig, FakeGameConfig>();
 
 // Batcher pour regrouper les directions et émettre toutes les 3s
 builder.Services.AddSingleton<DirectionBatcher>();
