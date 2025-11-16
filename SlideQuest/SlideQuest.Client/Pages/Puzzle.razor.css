@@ -115,6 +115,19 @@
 }
 
 
+.slide-quest-game-grid {
+    --cell: calc(var(--grid-size, 800px) / max(var(--grid-width), var(--grid-height)));
+
+    width: calc(var(--cell) * var(--grid-width));
+    height: calc(var(--cell) * var(--grid-height));
+    
+    display: grid;
+    grid-template-columns: repeat(var(--grid-width), var(--cell));
+    grid-auto-rows: var(--cell);
+    gap: 0;
+}
+
+
 .grid-cell {
     position: relative;
 }
@@ -132,25 +145,5 @@
 
 
 
-.grid {
-  /* Cell size adapts to fill the square container while keeping cells square */
-  --cell: calc(var(--grid-size, 480px) / max(var(--grid-width), var(--grid-height)));
-  display: grid;
-  grid-template-columns: repeat(var(--grid-width), var(--cell));
-  grid-auto-rows: var(--cell);
-  gap: 0; /* no gaps so borders create the grid lines */
-  border: 2px solid #222;
-  width: calc(var(--cell) * var(--grid-width));
-  height: calc(var(--cell) * var(--grid-height));
-}
-
-.cell { border: 1px solid #1112; position: relative; }
-.cell.empty { background: #dff3ff; }
-.cell.obstacle { background: #444; }
-.cell.path { background: #7fd48a; }
-/*.cell.path { background: #dff3ff; }*/
-.cell.start { background: #ffcc00; }
-.cell.end { background: #ff6666; }
-.cell.player { background: var(--color-primary) }
 
 .moves { margin-top: 1rem; font-family: JetBrains Mono, Consolas, monospace; }

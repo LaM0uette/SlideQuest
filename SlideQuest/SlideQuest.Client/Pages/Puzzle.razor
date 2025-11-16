@@ -46,7 +46,7 @@
             <div class="slide-quest-game-grid-container"
                  style="--grid-size: 800px; --grid-width: @Grid?.Width; --grid-height: @Grid?.Height;">
                 
-                <div class="grid">
+                <div class="slide-quest-game-grid">
                     @for (int y = 0; y < Grid?.Height; y++)
                     {
                         for (int x = 0; x < Grid?.Width; x++)
@@ -55,12 +55,13 @@
                             {
                                 CellType.Start => "start",
                                 CellType.End => "end",
-                                CellType.Path => "path",
+                                CellType.Path => "ice", // set "path" to debug the valid path
                                 CellType.Obstacle => "obstacle",
-                                _ => "empty"
+                                _ => "ice"
                             };
-                            bool isPlayer = (PlayerCell.X == x && PlayerCell.Y == y);
-                            <div class="cell @cls @(isPlayer ? "player" : string.Empty)" title="(@x,@y)"></div>
+                            
+                            bool isPlayer = PlayerCell?.X == x && PlayerCell?.Y == y;
+                            <div class="grid-cell @(isPlayer ? "grid-cell-player" : $"grid-cell-{cls}")" title="(@x,@y)"></div>
                         }
                     }
                 </div>
