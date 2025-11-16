@@ -23,7 +23,7 @@ public class PuzzlePresenter : ComponentBase, IDisposable, IAsyncDisposable
     [Inject] private IGridGenerator _gridGenerator { get; set; } = null!;
     [Inject] private IGameConfig _gameConfig { get; set; } = null!;
     
-    private Difficulty _currentDifficulty = Difficulty.Easy;
+    private Difficulty _currentDifficulty = Difficulty.Normal;
     private int _minGridLimit;
     private int _maxGridLimit;
     
@@ -35,6 +35,8 @@ public class PuzzlePresenter : ComponentBase, IDisposable, IAsyncDisposable
         _gameHubService.GenerateRequested += OnGenerateRequested;
         _gameHubService.ResetRequested += OnResetRequested;
         _gameHubService.DirectionChanged += OnDirectionChanged;
+        
+        Generate(); // TODO: remove this
     }
 
     protected override async Task OnInitializedAsync()
@@ -78,21 +80,6 @@ public class PuzzlePresenter : ComponentBase, IDisposable, IAsyncDisposable
         };
         
         OnKeyDown(args);
-    }
-
-    protected void SlideButton(string dir)
-    {
-        if (Grid is null) 
-            return;
-        
-        switch (dir)
-        {
-            case "U": Slide(0, -1); break;
-            case "D": Slide(0, 1); break;
-            case "L": Slide(-1, 0); break;
-            case "R": Slide(1, 0); break;
-        }
-        
     }
     
     

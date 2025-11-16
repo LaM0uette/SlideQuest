@@ -1,4 +1,6 @@
-﻿.slide-quest-puzzle {
+﻿/*region Slide quest puzzle */
+
+.slide-quest-puzzle {
     height: 100%;
     
     display: grid;
@@ -8,33 +10,45 @@
     justify-items: center;
 }
 
+/*endregion*/
 
-/*region Slide quest gen rules*/
 
-.slide-quest-gen-rules {
+/*region Slide quest rules */
+
+.slide-quest-rules {
     grid-column: 1;
-    
+
     font-family: var(--font), sans-serif;
 }
 
-.slide-quest-gen-rules__title {
+.slide-quest-rules__title {
     font-family: var(--font-bold), sans-serif;
     font-size: 2.5rem;
+    margin-top: 2.5rem;
     margin-bottom: 1.8rem;
 }
 
 
-.slide-quest-gen-rules-commands {
+.slide-quest-rules-commands {
     display: flex;
     flex-direction: column;
     gap: 0.3em;
-    
+
     font-size: 1.5rem;
 }
 
-.slide-quest-gen-rules-commands span {
+.slide-quest-rules-commands span {
     font-family: var(--font-bold), sans-serif;
     font-size: 1.6rem;
+}
+
+/*endregion*/
+
+
+/*region Slide quest game */
+
+.slide-quest-game {
+    grid-column: 2;
 }
 
 /*endregion*/
@@ -46,20 +60,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-.btn { padding: .4rem .8rem; border: 1px solid #888; background: #fafafa; cursor: pointer; }
-.btn:hover { background: #f0f0f0; }
 
 .legend { display:flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin: .5rem 0 1rem; }
 .legend .cell { width: 16px; height: 16px; display: inline-block; border: 1px solid #333; }
@@ -82,6 +82,7 @@
   width: calc(var(--cell) * var(--n));
   height: calc(var(--cell) * var(--m));
 }
+
 .cell { border: 1px solid #1112; position: relative; }
 .cell.empty { background: #dff3ff; }
 .cell.obstacle { background: #444; }
@@ -90,10 +91,5 @@
 .cell.start { background: #ffcc00; }
 .cell.end { background: #ff6666; }
 .cell.player { background: var(--color-primary) }
-
-.focusable:focus { outline: 3px solid #4aa3ff; outline-offset: 4px; }
-.play-controls { display:flex; flex-direction: column; gap:.25rem; margin:.5rem 0; }
-.play-controls > div { display:flex; gap:.25rem; justify-content:center; }
-.win { margin-top:.5rem; font-weight:700; color:#1a7f37; }
 
 .moves { margin-top: 1rem; font-family: JetBrains Mono, Consolas, monospace; }

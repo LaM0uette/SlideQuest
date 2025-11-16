@@ -9,23 +9,48 @@
 <div class="slide-quest-puzzle">
     @if (Grid is not null)
     {
+        <div class="slide-quest-rules">
+            
+            <h3 class="slide-quest-rules__title">Pour se déplacer, tapez la commande :</h3>
+
+            <ul class="slide-quest-rules-commands">
+                <li><span>!haut ou !up ou !z ou !w</span> → se déplace ver le haut</li>
+                <li><span>!bas ou !down ou !s</span> → se déplace ver le bas</li>
+                <li><span>!gauche ou !left ou !q ou !a</span> → se déplace ver la gauche</li>
+                <li><span>!droite ou !right ou !d</span> → se déplace ver la droite</li>
+                <li><span>!reset ou !r</span> → réinitialise la position du joueur au départ</li>
+            </ul>
+
+            <h3 class="slide-quest-rules__title">Pour créer une nouvelle partie, tapez la commande :</h3>
+
+            <ul class="slide-quest-rules-commands">
+                <li><span>!gen</span> → génère une map en difficulté @Difficulty.Normal</li>
+                <li><span>!gen 1</span> → génère une map en difficulté @Difficulty.Easy</li>
+                <li><span>!gen 2</span> → génère une map en difficulté @Difficulty.Normal</li>
+                <li><span>!gen 3</span> → génère une map en difficulté @Difficulty.Hard</li>
+                <li><span>!gen 4</span> → génère une map en difficulté @Difficulty.Expert</li>
+
+                <li><span>!genseed 12345</span> → génère une map en difficulté @Difficulty.Normal avec une seed</li>
+                <li><span>!genseed 1 12345</span> → génère une map en difficulté @Difficulty.Easy avec une seed</li>
+                <li><span>!genseed 2 12345</span> → génère une map en difficulté @Difficulty.Normal avec une seed</li>
+                <li><span>!genseed 3 12345</span> → génère une map en difficulté @Difficulty.Hard avec une seed</li>
+                <li><span>!genseed 4 12345</span> → génère une map en difficulté @Difficulty.Expert avec une seed</li>
+            </ul>
+
+        </div>
+        
+        <div class="slide-quest-game">
+            
+        </div>
+        
+        
+        
         <div class="legend">
+            <span class="cell player"></span> Joueur
             <span class="cell start"></span> Départ
             <span class="cell end"></span> Arrivée
-            <span class="cell path"></span> Chemin garanti
             <span class="cell obstacle"></span> Obstacle
-            <span class="cell empty"></span> Glace (vide)
-            <span class="cell player"></span> Joueur
-        </div>
-
-        <div class="play-controls">
-            <button class="btn" @onclick='@(() => SlideButton("U"))'>↑</button>
-            <div>
-                <button class="btn" @onclick='@(() => SlideButton("L"))'>←</button>
-                <button class="btn" @onclick='@(() => SlideButton("D"))'>↓</button>
-                <button class="btn" @onclick='@(() => SlideButton("R"))'>→</button>
-            </div>
-            <small>Clavier: flèches / WASD / ZQSD</small>
+            <span class="cell empty"></span> Glace
         </div>
 
         <div class="grid-container" style="--size: 480px; --n: @Grid?.Width; --m: @Grid?.Height;">
@@ -49,7 +74,10 @@
             </div>
         </div>
 
-        <div class="moves" hidden="@(Grid.MovesForWin.Count == 0)">
+        
+        
+        
+        @*<div class="moves" hidden="@(Grid.MovesForWin.Count == 0)">
             <h4>Suite de mouvements (flèches) pour résoudre:</h4>
             <p>
                 @foreach (var m in Grid.MovesForWin)
@@ -58,16 +86,16 @@
                 }
             </p>
             <p><small>Seed utilisée: @Grid.Seed</small></p>
-        </div>
+        </div>*@
 
         <GameLogger @ref="Logger" />
     }
     else
     {
-        <div class="slide-quest-gen-rules">
-            <h3 class="slide-quest-gen-rules__title">Pour créer une partie, tapez la commande :</h3>
+        <div class="slide-quest-rules">
+            <h3 class="slide-quest-rules__title">Pour créer une partie, tapez la commande :</h3>
 
-            <ul class="slide-quest-gen-rules-commands">
+            <ul class="slide-quest-rules-commands">
                 <li><span>!gen</span>   →   génère une map en difficulté @Difficulty.Normal</li>
                 <li><span>!gen 1</span>   →   génère une map en difficulté @Difficulty.Easy</li>
                 <li><span>!gen 2</span>   →   génère une map en difficulté @Difficulty.Normal</li>
