@@ -40,40 +40,40 @@
         </div>
         
         <div class="slide-quest-game">
-            
-        </div>
-        
-        
-        
-        <div class="legend">
-            <span class="cell player"></span> Joueur
-            <span class="cell start"></span> Départ
-            <span class="cell end"></span> Arrivée
-            <span class="cell obstacle"></span> Obstacle
-            <span class="cell empty"></span> Glace
-        </div>
 
-        <div class="grid-container" style="--size: 480px; --n: @Grid?.Width; --m: @Grid?.Height;">
-            <div class="grid">
-                @for (int y = 0; y < Grid?.Height; y++)
-                {
-                    @for (int x = 0; x < Grid?.Width; x++)
+            <div class="slide-quest-game-grid-container"
+                 style="--grid-size: 800px; --grid-width: @Grid?.Width; --grid-height: @Grid?.Height;">
+                
+                <div class="grid">
+                    @for (int y = 0; y < Grid?.Height; y++)
                     {
-                        string cls = Grid.Cells[x, y].Type switch
+                        for (int x = 0; x < Grid?.Width; x++)
                         {
-                            CellType.Start => "start",
-                            CellType.End => "end",
-                            CellType.Path => "path",
-                            CellType.Obstacle => "obstacle",
-                            _ => "empty"
-                        };
-                        bool isPlayer = (PlayerCell.X == x && PlayerCell.Y == y);
-                        <div class="cell @cls @(isPlayer ? "player" : string.Empty)" title="(@x,@y)"></div>
+                            string cls = Grid.Cells[x, y].Type switch
+                            {
+                                CellType.Start => "start",
+                                CellType.End => "end",
+                                CellType.Path => "path",
+                                CellType.Obstacle => "obstacle",
+                                _ => "empty"
+                            };
+                            bool isPlayer = (PlayerCell.X == x && PlayerCell.Y == y);
+                            <div class="cell @cls @(isPlayer ? "player" : string.Empty)" title="(@x,@y)"></div>
+                        }
                     }
-                }
+                </div>
+                
             </div>
-        </div>
+            
+            <div class="slide-quest-game-grid-legend">
+                <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-player"></span> Joueur</p>
+                <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-start"></span> Départ</p>
+                <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-end"></span> Arrivée</p>
+                <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-obstacle"></span> Obstacle</p>
+                <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-ice"></span> Glace</p>
+            </div>
 
+        </div>
         
         
         
