@@ -1,11 +1,12 @@
 ﻿@page "/puzzle"
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
+@using GameConfig
 @inherits PuzzlePresenter
 
 
 <PageTitle>SlideQuest</PageTitle>
 
-<div>
+<div class="slide-quest-puzzle">
     @if (Grid is not null)
     {
         <div class="legend">
@@ -63,6 +64,22 @@
     }
     else
     {
-        <p>Choisissez une taille et cliquez sur Générer.</p>
+        <div class="slide-quest-gen-rules">
+            <h3 class="slide-quest-gen-rules__title">Pour créer une partie, tapez la commande :</h3>
+
+            <ul class="slide-quest-gen-rules-commands">
+                <li><span>!gen</span>   →   génère une map en difficulté @Difficulty.Normal</li>
+                <li><span>!gen 1</span>   →   génère une map en difficulté @Difficulty.Easy</li>
+                <li><span>!gen 2</span>   →   génère une map en difficulté @Difficulty.Normal</li>
+                <li><span>!gen 3</span>   →   génère une map en difficulté @Difficulty.Hard</li>
+                <li><span>!gen 4</span>   →   génère une map en difficulté @Difficulty.Expert</li>
+
+                <li><span>!genseed 12345</span>   →   génère une map en difficulté @Difficulty.Normal avec une seed</li>
+                <li><span>!genseed 1 12345</span>   →   génère une map en difficulté @Difficulty.Easy avec une seed</li>
+                <li><span>!genseed 2 12345</span>   →   génère une map en difficulté @Difficulty.Normal avec une seed</li>
+                <li><span>!genseed 3 12345</span>   →   génère une map en difficulté @Difficulty.Hard avec une seed</li>
+                <li><span>!genseed 4 12345</span>   →   génère une map en difficulté @Difficulty.Expert avec une seed</li>
+            </ul>
+        </div>
     }
 </div>
