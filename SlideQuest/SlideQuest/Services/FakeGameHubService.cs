@@ -8,7 +8,7 @@ public sealed class FakeGameHubService : IGameHubService
 {
     public event Action<Direction>? DirectionChanged;
     public event Action? ResetRequested;
-    public event Action? GenerateRequested;
+    public event Action<int?, string?>? GenerateRequested;
 
     public Task EnsureConnectionAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
 

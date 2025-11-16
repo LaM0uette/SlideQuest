@@ -36,10 +36,10 @@ public static class CommandEndpoints
         return Results.Accepted("/reset");
     }
 
-    private static async Task<IResult> Generate(IHubContext<GameHub, IGameHubClient> hub)
+    private static async Task<IResult> Generate([FromQuery] int? difficulty, [FromQuery] string? seed, IHubContext<GameHub, IGameHubClient> hub)
     {
-        await hub.Clients.All.Generate();
-        return Results.Accepted("/gen");
+        await hub.Clients.All.Generate(difficulty, seed);
+        return Results.Accepted("/gen", new { difficulty, seed });
     }
 
     #endregion

@@ -10,7 +10,7 @@ public sealed class GameHubService : IGameHubService, IGameHubClient, IAsyncDisp
 
     public event Action<Direction>? DirectionChanged;
     public event Action? ResetRequested;
-    public event Action? GenerateRequested;
+    public event Action<int?, string?>? GenerateRequested;
     
     private readonly NavigationManager _navigationManager;
     
@@ -48,7 +48,7 @@ public sealed class GameHubService : IGameHubService, IGameHubClient, IAsyncDisp
 
         _connection.On<Direction>(nameof(IGameHubClient.SwitchDirection), SwitchDirection);
         _connection.On(nameof(IGameHubClient.Reset), Reset);
-        _connection.On(nameof(IGameHubClient.Generate), Generate);
+        _connection.On<int?, string?>(nameof(IGameHubClient.Generate), Generate);
 
         await _connection.StartAsync(cancellationToken);
         Console.WriteLine("[SignalR] Connected to GameHub");
@@ -78,9 +78,9 @@ public sealed class GameHubService : IGameHubService, IGameHubClient, IAsyncDisp
         return Task.CompletedTask;
     }
 
-    public Task Generate()
+    public Task Generate(int? difficultyCode, string? seed)
     {
-        GenerateRequested?.Invoke();
+        GenerateRequested?.Invoke(difficultyCode, seed);
         return Task.CompletedTask;
     }
 

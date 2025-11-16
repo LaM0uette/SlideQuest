@@ -6,7 +6,7 @@ public interface IGameHubService
 {
     event Action<Direction>? DirectionChanged;
     event Action? ResetRequested;
-    event Action? GenerateRequested;
+    event Action<int?, string?>? GenerateRequested;
     
     Task EnsureConnectionAsync(CancellationToken cancellationToken = default);
     

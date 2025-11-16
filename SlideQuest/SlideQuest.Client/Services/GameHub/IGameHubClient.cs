@@ -6,5 +6,5 @@ public interface IGameHubClient
 {
     Task SwitchDirection(Direction direction);
     Task Reset();
-    Task Generate();
+    Task Generate(int? difficultyCode, string? seed);
 }

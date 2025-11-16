@@ -124,17 +124,31 @@ public class PuzzlePresenter : ComponentBase, IDisposable
     }
     
     
-    private void OnGenerateRequested()
+    private void OnGenerateRequested(int? difficultyCode, string? seed)
     {
-        CurrentDifficulty = Difficulty.Normal;
+        if (difficultyCode.HasValue)
+        {
+            CurrentDifficulty = difficultyCode.Value switch
+            {
+                1 => Difficulty.Easy,
+                2 => Difficulty.Normal,
+                3 => Difficulty.Hard,
+                4 => Difficulty.Expert,
+                _ => Difficulty.Normal
+            };
+        }
+        else
+        {
+            CurrentDifficulty = Difficulty.Normal; // default when not provided
+        }
         
         _minGridLimit = _gameConfig.GetMinLimit(CurrentDifficulty);
         _maxGridLimit = _gameConfig.GetMaxLimit(CurrentDifficulty);
         
-        _seedInput = null;
+        _seedInput = seed; // store the provided seed string; Generate will parse/hash it
         
-        Logger?.Log("> hub: generate (Normal)");
-        Generate();
+        Logger?.Log($"> hub: generate ({CurrentDifficulty}) seed={(seed ?? "").ToString()}");
+        Generate(seed);
         
         _shouldFocusGrid = true;
     }
@@ -205,11 +219,22 @@ public class PuzzlePresenter : ComponentBase, IDisposable
     }
     
     //TODO: make this private after add !gen command with difficulty/seed params
-    protected void Generate()
+    protected void Generate(string? seedOverride = null)
     {
         int? parsedSeed = null;
-        if (!string.IsNullOrWhiteSpace(_seedInput) && int.TryParse(_seedInput, out int parsed))
-            parsedSeed = parsed;
+        string? seedSource = seedOverride ?? _seedInput;
+        if (!string.IsNullOrWhiteSpace(seedSource))
+        {
+            if (int.TryParse(seedSource, out int parsed))
+            {
+                parsedSeed = parsed;
+            }
+            else
+            {
+                // Hash string to a stable int
+                parsedSeed = GetStableIntFromString(seedSource);
+            }
+        }
 
         int seedToUse = parsedSeed ?? Random.Shared.Next(int.MinValue, int.MaxValue);
 
@@ -286,6 +311,23 @@ public class PuzzlePresenter : ComponentBase, IDisposable
         _shouldFocusGrid = true;
         
         StateHasChanged();
+    }
+
+    private static int GetStableIntFromString(string input)
+    {
+        // Simple FNV-1a 32-bit hash to int
+        unchecked
+        {
+            const uint fnvOffset = 2166136261;
+            const uint fnvPrime = 16777619;
+            uint hash = fnvOffset;
+            foreach (char c in input)
+            {
+                hash ^= c;
+                hash *= fnvPrime;
+            }
+            return (int)hash;
+        }
     }
     
     private bool InGrid(int x, int y)

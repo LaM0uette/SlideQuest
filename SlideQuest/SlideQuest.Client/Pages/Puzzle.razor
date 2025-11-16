@@ -20,7 +20,7 @@
     <label style="margin-left:1rem;">Seed:</label>
     <input type="text" @bind="_seedInput" style="width:8rem;" placeholder="aléatoire" />
 
-    <button class="btn" style="margin-left:1rem;" @onclick="@Generate">Générer</button>
+    <button class="btn" style="margin-left:1rem;" @onclick='@(() => Generate())'>Générer</button>
 </div>
 
 @if (Grid is not null)
