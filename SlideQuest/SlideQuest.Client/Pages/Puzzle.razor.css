@@ -26,23 +26,38 @@
 
 .slide-quest-rules__title {
     font-family: var(--font-bold), sans-serif;
-    font-size: 2.2rem;
-    margin-top: 3rem;
-    margin-bottom: 1.8rem;
+    font-size: 2.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.slide-quest-rules__title-spacer {
+    margin-top: 2.5rem;
 }
 
 
 .slide-quest-rules-commands {
     display: flex;
     flex-direction: column;
-    gap: 0.3em;
+    gap: 0.2em;
 
-    font-size: 1.4rem;
+    font-size: 1.8rem;
 }
 
 .slide-quest-rules-commands span {
     font-family: var(--font-bold), sans-serif;
-    font-size: 1.5rem;
+    font-size: 2rem;
+}
+
+.sqrc--1 {
+    color: var(--color-sqrc-1);
+}
+
+.sqrc--2 {
+    color: var(--color-sqrc-2);
+}
+
+.sqrc--3 {
+    color: var(--color-sqrc-3);
 }
 
 /*endregion*/
@@ -71,7 +86,7 @@
     width: 100%;
     
     font-family: var(--font), sans-serif;
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     
     display: flex;
     justify-content: center;
