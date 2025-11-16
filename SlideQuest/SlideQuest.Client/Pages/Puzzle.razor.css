@@ -43,9 +43,11 @@
     font-size: 1.8rem;
 }
 
-.slide-quest-rules-commands span {
+.sqrc--1,
+.sqrc--2,
+.sqrc--3 {
     font-family: var(--font-bold), sans-serif;
-    font-size: 2rem;
+    font-size: 1.9rem;
 }
 
 .sqrc--1 {

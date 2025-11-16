@@ -14,11 +14,11 @@
             <h3 class="slide-quest-rules__title">Pour se déplacer :</h3>
 
             <ul class="slide-quest-rules-commands">
-                <li><span><span class="sqrc--1">!haut</span> ou <span class="sqrc--1">!up</span> ou <span class="sqrc--1">!z</span> ou <span class="sqrc--1">!w</span> : </span>aller en <span class="sqrc--1">haut</span></li>
-                <li><span><span class="sqrc--1">!bas</span> ou <span class="sqrc--1">!down</span> ou <span class="sqrc--1">!s</span> : </span>aller en <span class="sqrc--1">bas</span></li>
-                <li><span><span class="sqrc--1">!gauche</span> ou <span class="sqrc--1">!left</span> ou <span class="sqrc--1">!q</span> ou <span class="sqrc--1">!a</span> : </span>aller à <span class="sqrc--1">gauche</span></li>
-                <li><span><span class="sqrc--1">!droite</span> ou <span class="sqrc--1">!right</span> ou <span class="sqrc--1">!d</span> : </span>aller à <span class="sqrc--1">droite</span></li>
-                <li><span><span class="sqrc--1">!reset</span> ou <span class="sqrc--1">!r</span> : </span>revenir au <span class="sqrc--1">départ</span></li>
+                <li><span><span class="sqrc--1">!haut</span> / <span class="sqrc--1">!up</span> / <span class="sqrc--1">!z</span> / <span class="sqrc--1">!w</span> -> </span>aller en <span class="sqrc--1">HAUT</span></li>
+                <li><span><span class="sqrc--1">!bas</span> / <span class="sqrc--1">!down</span> / <span class="sqrc--1">!s</span> -> </span>aller en <span class="sqrc--1">BAS</span></li>
+                <li><span><span class="sqrc--1">!gauche</span> / <span class="sqrc--1">!left</span> / <span class="sqrc--1">!q</span> / <span class="sqrc--1">!a</span> -> </span>aller à <span class="sqrc--1">GAUCHE</span></li>
+                <li><span><span class="sqrc--1">!droite</span> / <span class="sqrc--1">!right</span> / <span class="sqrc--1">!d</span> -> </span>aller à <span class="sqrc--1">DROITE</span></li>
+                <li><span><span class="sqrc--1">!reset</span> / <span class="sqrc--1">!r</span> -> </span>revenir au <span class="sqrc--1">DÉPART</span></li>
             </ul>
             
             <div class="slide-quest-rules__title-spacer"></div>
@@ -26,17 +26,17 @@
             <h3 class="slide-quest-rules__title">Pour créer une nouvelle partie :</h3>
 
             <ul class="slide-quest-rules-commands">
-                <li><span><span class="sqrc--1">!gen</span> : </span>difficulté @Difficulty.Normal</li>
-                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">1</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Easy</span></li>
-                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">2</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Normal</span></li>
-                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">3</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Hard</span></li>
-                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">4</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Expert</span></li>
+                <li><span><span class="sqrc--1">!gen</span> -> </span>difficulté @nameof(Difficulty.Normal).ToUpper()</li>
+                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">1</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Easy).ToUpper()</span></li>
+                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">2</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Normal).ToUpper()</span></li>
+                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">3</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Hard).ToUpper()</span></li>
+                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">4</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Expert).ToUpper()</span></li>
 
-                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--3">12345</span> : </span>difficulté @Difficulty.Normal avec une <span class="sqrc--3">Seed</span></li>
-                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">1</span> <span class="sqrc--3">12345</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Easy</span> avec une <span class="sqrc--3">Seed</span></li>
-                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">2</span> <span class="sqrc--3">12345</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Normal</span> avec une <span class="sqrc--3">Seed</span></li>
-                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">3</span> <span class="sqrc--3">12345</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Hard</span> avec une <span class="sqrc--3">Seed</span></li>
-                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">4</span> <span class="sqrc--3">12345</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Expert</span> avec une <span class="sqrc--3">Seed</span></li>
+                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--3">12345</span> -> </span>difficulté @nameof(Difficulty.Normal).ToUpper() avec une <span class="sqrc--3">SEED</span></li>
+                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">1</span> <span class="sqrc--3">12345</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Easy).ToUpper()</span> avec une <span class="sqrc--3">SEED</span></li>
+                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">2</span> <span class="sqrc--3">12345</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Normal).ToUpper()</span> avec une <span class="sqrc--3">SEED</span></li>
+                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">3</span> <span class="sqrc--3">12345</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Hard).ToUpper()</span> avec une <span class="sqrc--3">SEED</span></li>
+                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">4</span> <span class="sqrc--3">12345</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Expert).ToUpper()</span> avec une <span class="sqrc--3">SEED</span></li>
             </ul>
 
         </div>
@@ -94,17 +94,17 @@
             <h3 class="slide-quest-rules__title">Pour créer une partie :</h3>
 
             <ul class="slide-quest-rules-commands">
-                <li><span><span class="sqrc--1">!gen</span> : </span>difficulté @Difficulty.Normal</li>
-                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">1</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Easy</span></li>
-                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">2</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Normal</span></li>
-                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">3</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Hard</span></li>
-                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">4</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Expert</span></li>
+                <li><span><span class="sqrc--1">!gen</span> -> </span>difficulté @nameof(Difficulty.Normal).ToUpper()</li>
+                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">1</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Easy).ToUpper()</span></li>
+                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">2</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Normal).ToUpper()</span></li>
+                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">3</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Hard).ToUpper()</span></li>
+                <li><span><span class="sqrc--1">!gen</span> <span class="sqrc--2">4</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Expert).ToUpper()</span></li>
 
-                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--3">12345</span> : </span>difficulté @Difficulty.Normal avec une <span class="sqrc--3">Seed</span></li>
-                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">1</span> <span class="sqrc--3">12345</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Easy</span> avec une <span class="sqrc--3">Seed</span></li>
-                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">2</span> <span class="sqrc--3">12345</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Normal</span> avec une <span class="sqrc--3">Seed</span></li>
-                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">3</span> <span class="sqrc--3">12345</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Hard</span> avec une <span class="sqrc--3">Seed</span></li>
-                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">4</span> <span class="sqrc--3">12345</span> : </span>difficulté <span class="sqrc--2">@Difficulty.Expert</span> avec une <span class="sqrc--3">Seed</span></li>
+                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--3">12345</span> -> </span>difficulté @nameof(Difficulty.Normal).ToUpper() avec une <span class="sqrc--3">SEED</span></li>
+                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">1</span> <span class="sqrc--3">12345</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Easy).ToUpper()</span> avec une <span class="sqrc--3">SEED</span></li>
+                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">2</span> <span class="sqrc--3">12345</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Normal).ToUpper()</span> avec une <span class="sqrc--3">SEED</span></li>
+                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">3</span> <span class="sqrc--3">12345</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Hard).ToUpper()</span> avec une <span class="sqrc--3">SEED</span></li>
+                <li><span><span class="sqrc--1">!genseed</span> <span class="sqrc--2">4</span> <span class="sqrc--3">12345</span> -> </span>difficulté <span class="sqrc--2">@nameof(Difficulty.Expert).ToUpper()</span> avec une <span class="sqrc--3">SEED</span></li>
             </ul>
         </div>
     }
