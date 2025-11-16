@@ -66,7 +66,15 @@
 
                     @if (PlayerCell is not null)
                     {
-                        <div class="grid-player" style="left: calc(var(--cell) * @PlayerCell.X); top: calc(var(--cell) * @PlayerCell.Y);"></div>
+                        var facingCls = PlayerFacing switch
+                        {
+                            SlideQuest.Shared.Enums.Direction.Top => "grid-player--back",
+                            SlideQuest.Shared.Enums.Direction.Bottom => "grid-player--front",
+                            SlideQuest.Shared.Enums.Direction.Left => "grid-player--left",
+                            SlideQuest.Shared.Enums.Direction.Right => "grid-player--right",
+                            _ => "grid-player--front"
+                        };
+                        <div class="grid-player @facingCls" style="left: calc(var(--cell) * @PlayerCell.X); top: calc(var(--cell) * @PlayerCell.Y);"></div>
                     }
                 </div>
                 

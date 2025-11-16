@@ -1,7 +1,8 @@
 ﻿/*region Slide quest puzzle */
 
 .slide-quest-puzzle {
-    height: 100%;
+    width: 1920px;
+    height: 1080px;
     
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -152,18 +153,25 @@
     width: var(--cell);
     height: var(--cell);
     z-index: 2;
-    background: var(--color-primary);
-    border: 2px solid rgba(0,0,0,0.2);
-    box-sizing: border-box;
-    border-radius: 3px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges; /* compat */
 }
+
+/* Orientation du joueur -> sprites (16x16) */
+.grid-player--front { background-image: url('/img/player-front.png'); }
+.grid-player--back { background-image: url('/img/player-back.png'); }
+.grid-player--left { background-image: url('/img/player-left.png'); }
+.grid-player--right { background-image: url('/img/player-right.png'); }
 
 /* Légende: mêmes visuels que la grille */
 .grid-cell-legend__icon.grid-cell-start { background-image: url('/img/start.png'); background-size: 100% 100%; image-rendering: pixelated; }
 .grid-cell-legend__icon.grid-cell-end { background-image: url('/img/end.png'); background-size: 100% 100%; image-rendering: pixelated; }
 .grid-cell-legend__icon.grid-cell-obstacle { background-image: url('/img/obstacle.png'); background-size: 100% 100%; image-rendering: pixelated; }
 .grid-cell-legend__icon.grid-cell-ice { background-image: url('/img/ice.png'); background-size: 100% 100%; image-rendering: pixelated; }
-.grid-cell-player { background: var(--color-primary); }
+.grid-cell-player { background-image: url('/img/player-front.png'); background-size: 100% 100%; image-rendering: pixelated; }
 
 /*endregion*/
 
