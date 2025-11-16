@@ -18,4 +18,15 @@
         <ProjectReference Include="..\..\SlideQuest.Shared\SlideQuest.Shared.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="wwwroot\img\end.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\img\ice.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\img\obstacle.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\img\player-back.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\img\player-front.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\img\player-left.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\img\player-right.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\img\start.png" />
+    </ItemGroup>
+
 </Project>

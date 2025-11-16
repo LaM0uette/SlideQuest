@@ -66,27 +66,27 @@
 
                     @if (PlayerCell is not null)
                     {
-                        var facingCls = PlayerFacing switch
+                        string playerFacing = PlayerFacing switch
                         {
-                            SlideQuest.Shared.Enums.Direction.Top => "grid-player--back",
-                            SlideQuest.Shared.Enums.Direction.Bottom => "grid-player--front",
-                            SlideQuest.Shared.Enums.Direction.Left => "grid-player--left",
-                            SlideQuest.Shared.Enums.Direction.Right => "grid-player--right",
+                            Direction.Top => "grid-player--back",
+                            Direction.Bottom => "grid-player--front",
+                            Direction.Left => "grid-player--left",
+                            Direction.Right => "grid-player--right",
                             _ => "grid-player--front"
                         };
-                        <div class="grid-player @facingCls" style="left: calc(var(--cell) * @PlayerCell.X); top: calc(var(--cell) * @PlayerCell.Y);"></div>
+                        <div class="grid-player @playerFacing" style="left: calc(var(--cell) * @PlayerCell.X); top: calc(var(--cell) * @PlayerCell.Y);"></div>
                     }
                 </div>
                 
             </div>
             
-            <div class="slide-quest-game-grid-legend">
-                <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-player"></span> Joueur</p>
-                <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-start"></span> Départ</p>
-                <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-end"></span> Arrivée</p>
-                <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-obstacle"></span> Obstacle</p>
-                <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-ice"></span> Glace</p>
-            </div>
+            @* <div class="slide-quest-game-grid-legend"> *@
+            @*     <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-player"></span> Joueur</p> *@
+            @*     <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-start"></span> Départ</p> *@
+            @*     <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-end"></span> Arrivée</p> *@
+            @*     <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-obstacle"></span> Obstacle</p> *@
+            @*     <p class="grid-cell-legend"><span class="grid-cell-legend__icon grid-cell-ice"></span> Glace</p> *@
+            @* </div> *@
 
         </div>
         

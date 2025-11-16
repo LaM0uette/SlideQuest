@@ -23,6 +23,8 @@
     
     padding: 1rem;
     box-sizing: border-box;
+
+    scale: 1.2; /* TODO: remove this */
 }
 
 .slide-quest-rules__title {
@@ -118,6 +120,8 @@
 
 .slide-quest-game-grid {
     --cell: calc(var(--grid-size, 800px) / max(var(--grid-width), var(--grid-height)));
+    
+    position: relative;
 
     width: calc(var(--cell) * var(--grid-width));
     height: calc(var(--cell) * var(--grid-height));
@@ -126,47 +130,44 @@
     grid-template-columns: repeat(var(--grid-width), var(--cell));
     grid-auto-rows: var(--cell);
     gap: 0;
-
-    position: relative; /* pour positionner le joueur en overlay */
 }
 
 
 .grid-cell {
     position: relative;
+    
     background-repeat: no-repeat;
     background-position: center;
     background-size: 100% 100%;
     image-rendering: pixelated;
-    image-rendering: crisp-edges; /* compat */
 }
 
-/* Cellules -> images (16x16) */
 .grid-cell-start { background-image: url('/img/start.png'); }
 .grid-cell-end { background-image: url('/img/end.png'); }
 .grid-cell-obstacle { background-image: url('/img/obstacle.png'); }
 .grid-cell-ice { background-image: url('/img/ice.png'); }
-.grid-cell-path { outline: 2px solid #7fd48a66; } /* debug éventuel du chemin valide */
+.grid-cell-path { outline: 2px solid #7fd48a66; }
 
-/* Joueur en overlay */
+
 .grid-player {
     position: absolute;
+    
     width: var(--cell);
     height: var(--cell);
-    z-index: 2;
+    
     background-repeat: no-repeat;
     background-position: center;
     background-size: 100% 100%;
     image-rendering: pixelated;
-    image-rendering: crisp-edges; /* compat */
+    
+    z-index: 2;
 }
 
-/* Orientation du joueur -> sprites (16x16) */
 .grid-player--front { background-image: url('/img/player-front.png'); }
 .grid-player--back { background-image: url('/img/player-back.png'); }
 .grid-player--left { background-image: url('/img/player-left.png'); }
 .grid-player--right { background-image: url('/img/player-right.png'); }
 
-/* Légende: mêmes visuels que la grille */
 .grid-cell-legend__icon.grid-cell-start { background-image: url('/img/start.png'); background-size: 100% 100%; image-rendering: pixelated; }
 .grid-cell-legend__icon.grid-cell-end { background-image: url('/img/end.png'); background-size: 100% 100%; image-rendering: pixelated; }
 .grid-cell-legend__icon.grid-cell-obstacle { background-image: url('/img/obstacle.png'); background-size: 100% 100%; image-rendering: pixelated; }

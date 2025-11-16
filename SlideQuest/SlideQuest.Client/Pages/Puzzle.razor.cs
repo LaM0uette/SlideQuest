@@ -14,9 +14,8 @@ public class PuzzlePresenter : ComponentBase, IDisposable, IAsyncDisposable
     
     protected Grid? Grid;
     protected Cell? PlayerCell;
-    private Direction _playerFacing = Direction.Bottom; // "front" par défaut (vers le bas)
-    protected Direction PlayerFacing => _playerFacing; // exposé au Razor
-    
+    protected Direction PlayerFacing { get; private set; } = Direction.Bottom;
+
     [Inject] private IJSRuntime _jsRuntime { get; set; } = null!;
     [Inject] private IGameHubService _gameHubService { get; set; } = null!;
     [Inject] private IGridGenerator _gridGenerator { get; set; } = null!;
@@ -113,7 +112,7 @@ public class PuzzlePresenter : ComponentBase, IDisposable, IAsyncDisposable
             return;
         
         PlayerCell = Grid.Start;
-        _playerFacing = Direction.Bottom; // front par défaut
+        PlayerFacing = Direction.Bottom;
         
         StateHasChanged();
     }
@@ -167,11 +166,10 @@ public class PuzzlePresenter : ComponentBase, IDisposable, IAsyncDisposable
         if (directionX == 0 && directionY == 0) 
             return;
         
-        // Met à jour l'orientation selon la direction demandée
-        if (directionX > 0) _playerFacing = Direction.Right;
-        else if (directionX < 0) _playerFacing = Direction.Left;
-        else if (directionY > 0) _playerFacing = Direction.Bottom; // front
-        else if (directionY < 0) _playerFacing = Direction.Top; // back
+        if (directionX > 0) PlayerFacing = Direction.Right;
+        else if (directionX < 0) PlayerFacing = Direction.Left;
+        else if (directionY > 0) PlayerFacing = Direction.Bottom; // front
+        else if (directionY < 0) PlayerFacing = Direction.Top; // back
 
         (int playerX, int playerY, _) = PlayerCell ?? throw new InvalidOperationException("PlayerCell is null");
 
@@ -277,7 +275,7 @@ public class PuzzlePresenter : ComponentBase, IDisposable, IAsyncDisposable
         Grid = generated;
         
         PlayerCell = Grid.Start;
-        _playerFacing = Direction.Bottom; // front par défaut sur nouvelle grille
+        PlayerFacing = Direction.Bottom;
         
         StateHasChanged();
     }
