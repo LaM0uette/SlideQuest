@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using SlideQuest.Client.Services;
 using SlideQuest.Shared.Enums;
-using Components.GameLogger;
 
 namespace SlideQuest.Client.Pages;
 
@@ -15,8 +14,6 @@ public class PuzzlePresenter : ComponentBase, IDisposable, IAsyncDisposable
     
     protected Grid? Grid;
     protected Cell? PlayerCell;
-    
-    protected GameLoggerPresenter? Logger;
     
     [Inject] private IJSRuntime _jsRuntime { get; set; } = null!;
     [Inject] private IGameHubService _gameHubService { get; set; } = null!;
@@ -104,7 +101,6 @@ public class PuzzlePresenter : ComponentBase, IDisposable, IAsyncDisposable
         _minGridLimit = _gameConfig.GetMinLimit(_currentDifficulty);
         _maxGridLimit = _gameConfig.GetMaxLimit(_currentDifficulty);
         
-        Logger?.Log($"> hub: generate ({_currentDifficulty}) seed={seed ?? ""}");
         Generate(seed);
 
     }
@@ -116,7 +112,6 @@ public class PuzzlePresenter : ComponentBase, IDisposable, IAsyncDisposable
         
         PlayerCell = Grid.Start;
         
-        Logger?.Log("> hub: reset");
         StateHasChanged();
     }
 
@@ -139,8 +134,6 @@ public class PuzzlePresenter : ComponentBase, IDisposable, IAsyncDisposable
             default:
                 throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
         }
-
-        Logger?.Log($"> hub: {direction}");
     }
     
     private void OnKeyDown(KeyboardEventArgs eventArgs)
@@ -189,7 +182,6 @@ public class PuzzlePresenter : ComponentBase, IDisposable, IAsyncDisposable
         
         if (PlayerCell == Grid?.End)
         {
-            Logger?.Log(">>> Puzzle completed! <<<");
             Generate();
         }
         
