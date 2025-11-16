@@ -1,84 +1,68 @@
 ﻿@page "/puzzle"
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
-@using GameConfig
-@using Components.GameLogger
 @inherits PuzzlePresenter
 
-<PageTitle>Puzzle Glace</PageTitle>
 
-<h3>Puzzle Glace procédural</h3>
+<PageTitle>SlideQuest</PageTitle>
 
-<div class="controls">
-    <label>Difficulté:</label>
-    <select value="@CurrentDifficulty" @onchange="OnDifficultyChanged">
-        <option value="@Difficulty.Easy">Facile</option>
-        <option value="@Difficulty.Normal">Normal</option>
-        <option value="@Difficulty.Hard">Difficile</option>
-        <option value="@Difficulty.Expert">Expert</option>
-    </select>
-
-    <label style="margin-left:1rem;">Seed:</label>
-    <input type="text" @bind="_seedInput" style="width:8rem;" placeholder="aléatoire" />
-
-    <button class="btn" style="margin-left:1rem;" @onclick='@(() => Generate())'>Générer</button>
-</div>
-
-@if (Grid is not null)
-{
-    <div class="legend">
-        <span class="cell start"></span> Départ
-        <span class="cell end"></span> Arrivée
-        <span class="cell path"></span> Chemin garanti
-        <span class="cell obstacle"></span> Obstacle
-        <span class="cell empty"></span> Glace (vide)
-        <span class="cell player"></span> Joueur
-    </div>
-
-    <div class="play-controls">
-        <button class="btn" @onclick='@(() => SlideButton("U"))'>↑</button>
-        <div>
-            <button class="btn" @onclick='@(() => SlideButton("L"))'>←</button>
-            <button class="btn" @onclick='@(() => SlideButton("D"))'>↓</button>
-            <button class="btn" @onclick='@(() => SlideButton("R"))'>→</button>
+<div>
+    @if (Grid is not null)
+    {
+        <div class="legend">
+            <span class="cell start"></span> Départ
+            <span class="cell end"></span> Arrivée
+            <span class="cell path"></span> Chemin garanti
+            <span class="cell obstacle"></span> Obstacle
+            <span class="cell empty"></span> Glace (vide)
+            <span class="cell player"></span> Joueur
         </div>
-        <small>Clavier: flèches / WASD / ZQSD</small>
-    </div>
 
-    <div class="grid-container" style="--size: 480px; --n: @Grid?.Width; --m: @Grid?.Height;">
-        <div class="grid focusable" tabindex="0" @ref="GridRef" @onkeydown="OnKeyDown" @onkeydown:preventDefault @onkeydown:stopPropagation>
-            @for (int y = 0; y < Grid?.Height; y++)
-            {
-                @for (int x = 0; x < Grid?.Width; x++)
+        <div class="play-controls">
+            <button class="btn" @onclick='@(() => SlideButton("U"))'>↑</button>
+            <div>
+                <button class="btn" @onclick='@(() => SlideButton("L"))'>←</button>
+                <button class="btn" @onclick='@(() => SlideButton("D"))'>↓</button>
+                <button class="btn" @onclick='@(() => SlideButton("R"))'>→</button>
+            </div>
+            <small>Clavier: flèches / WASD / ZQSD</small>
+        </div>
+
+        <div class="grid-container" style="--size: 480px; --n: @Grid?.Width; --m: @Grid?.Height;">
+            <div class="grid">
+                @for (int y = 0; y < Grid?.Height; y++)
                 {
-                    string cls = Grid.Cells[x, y].Type switch
+                    @for (int x = 0; x < Grid?.Width; x++)
                     {
-                        CellType.Start => "start",
-                        CellType.End => "end",
-                        CellType.Path => "path",
-                        CellType.Obstacle => "obstacle",
-                        _ => "empty"
-                    };
-                    bool isPlayer = (PlayerCell.X == x && PlayerCell.Y == y);
-                    <div class="cell @cls @(isPlayer ? "player" : string.Empty)" title="(@x,@y)"></div>
+                        string cls = Grid.Cells[x, y].Type switch
+                        {
+                            CellType.Start => "start",
+                            CellType.End => "end",
+                            CellType.Path => "path",
+                            CellType.Obstacle => "obstacle",
+                            _ => "empty"
+                        };
+                        bool isPlayer = (PlayerCell.X == x && PlayerCell.Y == y);
+                        <div class="cell @cls @(isPlayer ? "player" : string.Empty)" title="(@x,@y)"></div>
+                    }
                 }
-            }
+            </div>
         </div>
-    </div>
 
-    <div class="moves" hidden="@(Grid.MovesForWin.Count == 0)">
-        <h4>Suite de mouvements (flèches) pour résoudre:</h4>
-        <p>
-            @foreach (var m in Grid.MovesForWin)
-            {
-                @:(@(m switch { SlideQuest.Shared.Enums.Direction.Top => "⬆️", SlideQuest.Shared.Enums.Direction.Bottom => "⬇️", SlideQuest.Shared.Enums.Direction.Left => "⬅️", SlideQuest.Shared.Enums.Direction.Right => "➡️", _ => "" })) 
-            }
-        </p>
-        <p><small>Seed utilisée: @Grid.Seed</small></p>
-    </div>
+        <div class="moves" hidden="@(Grid.MovesForWin.Count == 0)">
+            <h4>Suite de mouvements (flèches) pour résoudre:</h4>
+            <p>
+                @foreach (var m in Grid.MovesForWin)
+                {
+                    @:(@(m switch { SlideQuest.Shared.Enums.Direction.Top => "⬆️", SlideQuest.Shared.Enums.Direction.Bottom => "⬇️", SlideQuest.Shared.Enums.Direction.Left => "⬅️", SlideQuest.Shared.Enums.Direction.Right => "➡️", _ => "" })) 
+                }
+            </p>
+            <p><small>Seed utilisée: @Grid.Seed</small></p>
+        </div>
 
-    <GameLogger @ref="Logger" />
-}
-else
-{
-    <p>Choisissez une taille et cliquez sur Générer.</p>
-}
+        <GameLogger @ref="Logger" />
+    }
+    else
+    {
+        <p>Choisissez une taille et cliquez sur Générer.</p>
+    }
+</div>

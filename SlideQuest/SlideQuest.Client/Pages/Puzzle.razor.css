@@ -1,5 +1,4 @@
-﻿.controls { margin: 0 0 1rem 0; display: flex; gap: .5rem; align-items: center; }
-.btn { padding: .4rem .8rem; border: 1px solid #888; background: #fafafa; cursor: pointer; }
+﻿.btn { padding: .4rem .8rem; border: 1px solid #888; background: #fafafa; cursor: pointer; }
 .btn:hover { background: #f0f0f0; }
 
 .legend { display:flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin: .5rem 0 1rem; }
