@@ -59,10 +59,14 @@
                                 CellType.Obstacle => "obstacle",
                                 _ => "ice"
                             };
-                            
-                            bool isPlayer = PlayerCell?.X == x && PlayerCell?.Y == y;
-                            <div class="grid-cell @(isPlayer ? "grid-cell-player" : $"grid-cell-{cls}")" title="(@x,@y)"></div>
+
+                            <div class="grid-cell grid-cell-@cls" title="(@x,@y)"></div>
                         }
+                    }
+
+                    @if (PlayerCell is not null)
+                    {
+                        <div class="grid-player" style="left: calc(var(--cell) * @PlayerCell.X); top: calc(var(--cell) * @PlayerCell.Y);"></div>
                     }
                 </div>
                 
